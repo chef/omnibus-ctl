@@ -5,11 +5,11 @@ require "omnibus-ctl/version"
 Gem::Specification.new do |s|
   s.name        = "omnibus-ctl"
   s.version     = Omnibus::Ctl::VERSION
-  s.authors     = ["Adam Jacob"]
-  s.email       = ["adam@opscode.com"]
-  s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.authors     = ["Opscode, Inc."]
+  s.email       = ["legal@opscode.com"]
+  s.homepage    = "http://github.com/opscode/omnibus-ctl"
+  s.summary     = %q{Provides command line control for omnibus packages}
+  s.description = %q{Provides command line control for omnibus pakcages, rarely used as a gem}
 
   s.rubyforge_project = "omnibus-ctl"
 
@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
-  # s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
 end
