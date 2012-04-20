@@ -21,6 +21,6 @@ require 'omnibus-ctl'
 
 ctl = Omnibus::Ctl.new(ARGV[0])
 ctl.load_files(ARGV[1])
-ctl.run(ARGV[2], ARGV[3])
+ctl.run([ARGV[2], ARGV[3]])
 exit 0
 
