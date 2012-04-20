@@ -1,4 +1,4 @@
-#!/opt/opscode/embedded/bin/ruby
+#!/usr/bin/ruby
 #
 # Author:: Adam Jacob (<adam@opscode.com>)
 # Copyright:: Copyright (c) 2011 Opscode, Inc.
@@ -17,7 +17,8 @@
 # limitations under the License.
 #
 
-ctl = Omnibus::Ctl.new(File.basename($0).gsub('-ctl', ''))
-ctl.run(ARGV)
+ctl = Omnibus::Ctl.new(ARGV[0])
+ctl.load_files(ARGV[1])
+ctl.run(ARGV[2], ARGV[3])
 exit 0
 

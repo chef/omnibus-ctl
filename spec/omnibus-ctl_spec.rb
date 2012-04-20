@@ -135,4 +135,22 @@ describe Omnibus::Ctl do
       @ctl.run(["help"])
     end
   end
+
+  describe "load_files" do
+    it "loads the files in a path, and instance_evals them" do
+      @ctl.load_files(File.join(File.dirname(__FILE__), "data"))
+      @ctl.extended
+      @ctl.run(["extended"]).should == true
+    end
+
+    it "should let you add to the help output" do
+      @ctl.load_files(File.join(File.dirname(__FILE__), "data"))
+      @ctl.stub(:exit!).and_return(true)
+      @ctl.help
+      @ctl.fh_output.rewind
+      output = @ctl.fh_output.gets(nil)
+      output.should =~ /#{Regexp.escape("extended")}\n  #{Regexp.escape("Extended omnibus-ctl")}/
+    end
+  end
+
 end
