@@ -22,8 +22,8 @@ require 'omnibus-ctl'
 ctl = Omnibus::Ctl.new(ARGV[0])
 ctl.load_files(ARGV[1])
 arguments = []
-arguments << ARGV[2] if !ARGV[2].nil?
-arguments << ARGV[3] if !ARGV[3].nil?
-ctl.run([])
+arguments << ARGV[2] if ARGV[2].nil?
+arguments << ARGV[3] if ARGV[3].nil?
+ctl.run(arguments)
 exit 0
 
