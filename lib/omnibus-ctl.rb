@@ -53,7 +53,7 @@ module Omnibus
         },
         "cleanse" => {
           :desc => "Delete *all* private chef data, and start from scratch.",
-          :arity => 1
+          :arity => 2
         },
         "uninstall" => {
           :arity => 1,
@@ -213,7 +213,7 @@ module Omnibus
 
     def cleanse(*args)
       log "This will delete *all* configuration, log, and variable data associated with this application.\n\n*** You have 60 seconds to hit CTRL-C ***\n\n"
-      unless ARGV[1] == "yes"
+      unless args[1] == "yes"
         sleep 60
       end
       cleanup_procs_and_nuke("#{service_path}/* /tmp/opt #{data_path} #{etc_path} #{log_path}")
