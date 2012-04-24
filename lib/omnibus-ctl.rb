@@ -34,8 +34,8 @@ module Omnibus
       @name = name
       @display_name = name
       @base_path = "/opt/#{name}"
-      @sv_path = File.join(base_path, "sv")
-      @service_path = File.join(base_path, "service")
+      @sv_path = File.join(@base_path, "sv")
+      @service_path = File.join(@base_path, "service")
       @log_path = "/var/log/#{name}"
       @data_path = "/var/opt/#{name}"
       @etc_path = "/etc/#{name}"
