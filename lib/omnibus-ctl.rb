@@ -338,7 +338,7 @@ module Omnibus
       end
 
       method_to_call = command_to_run.gsub(/-/, '_')
-      self.send(method_to_call.to_sym, args)
+      self.send(method_to_call.to_sym, *args)
     end
 
   end
