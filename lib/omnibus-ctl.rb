@@ -220,7 +220,7 @@ module Omnibus
     end
 
     def get_all_services_files
-      Dir[sv_path]
+      Dir[File.join(sv_path, '*')]
     end
 
     def get_all_services
