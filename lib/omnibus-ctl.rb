@@ -28,7 +28,7 @@ module Omnibus
                       term kill start stop restart shutdown force-stop
                       force-reload force-restart force-shutdown check]
 
-    attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path, :service_path, :data_path, :log_path, :command_map, :fh_output, :kill_users
+    attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path, :service_path, :etc_path, :data_path, :log_path, :command_map, :fh_output, :kill_users
 
     def initialize(name)
       @name = name
@@ -118,11 +118,7 @@ module Omnibus
       method_name = sv_cmd.gsub(/-/, "_")
       Omnibus::Ctl.class_eval <<-EOH
       def #{method_name}(*args)
-        if args.length == 2
-          run_sv_command(args[1], args[0])
-        else
-          run_sv_command(args[0])
-        end
+        run_sv_command(*args)
       end
       EOH
     end
@@ -192,7 +188,10 @@ module Omnibus
       FileUtils.cp_r(etc_path, backup_dir) if File.exists?(etc_path)
       run_command("rm -rf #{filestr}")
 
-      graceful_kill
+      begin
+        graceful_kill
+      rescue SystemExit
+      end
 
       run_command("pkill -HUP -u #{kill_users.join(',')}") if kill_users.length > 0 
       run_command("pkill -HUP -f 'runsvdir -P #{service_path}'")
@@ -202,6 +201,10 @@ module Omnibus
       sleep 3
       run_command("pkill -KILL -u #{kill_users.join(',')}") if kill_users.length > 0 
       run_command("pkill -KILL -f 'runsvdir -P #{service_path}'")
+
+      get_all_services.each do |die_daemon_die|
+        run_command("pkill -KILL -f 'runsv #{die_daemon_die}'")
+      end
 
       log "Your config files have been backed up to #{backup_dir}."
       exit! 0
@@ -273,7 +276,7 @@ module Omnibus
     end
 
     def graceful_kill(*args)
-      status = args[1]
+      service = args[1]
       exit_status = 0
       get_all_services.each do |service_name|
         next if !service.nil? && service_name != service
@@ -317,12 +320,7 @@ module Omnibus
     end
 
     def run(args)
-      if args.length == 2 
-        command_to_run = args[1] 
-        check_arity = true
-      else 
-        command_to_run = args[0]
-      end
+      command_to_run = args[0]
 
       if !command_map.has_key?(command_to_run)
         log "I don't know that command."
@@ -332,7 +330,7 @@ module Omnibus
         help
       end
 
-      if check_arity && command_map[command_to_run][:arity] != 2
+      if args.length > 1 && command_map[command_to_run][:arity] != 2
         log "The command #{command_to_run} does not accept any arguments"
         exit! 2 
       end
