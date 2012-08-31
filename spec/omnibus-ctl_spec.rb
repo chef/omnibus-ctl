@@ -122,7 +122,7 @@ describe Omnibus::Ctl do
     it "exits 2 if the command is found, but not with the arity you provided on the cli" do
       exit_code = nil
       begin
-        @ctl.run(["not-found", "reconfigure"])
+        @ctl.run(["reconfigure","not-found"])
       rescue SystemExit => e
         exit_code = e.status
       end
@@ -131,7 +131,7 @@ describe Omnibus::Ctl do
 
     it "runs the method describe by the command" do
       @ctl.stub(:exit!).and_return(true)
-      @ctl.should_receive(:help).with(["help"])
+      @ctl.should_receive(:help).with("help")
       @ctl.run(["help"])
     end
   end
