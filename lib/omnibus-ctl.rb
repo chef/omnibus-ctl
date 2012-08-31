@@ -5,9 +5,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ module Omnibus
           :arity => 1,
           :desc => "List all the services (enabled services appear with a *.)"
         },
-        "status" => { 
+        "status" => {
           :desc => "Show the status of all the services.",
           :arity => 2
         },
@@ -129,7 +129,7 @@ module Omnibus
       end
     end
 
-    def add_command(name, description, arity=1, &block) 
+    def add_command(name, description, arity=1, &block)
       @command_map[name] = { :desc => description, :arity => arity }
       metaclass = class << self; self; end
       metaclass.send(:define_method, name.to_sym) { |*args| block.call(*args) }
@@ -174,7 +174,7 @@ module Omnibus
 
     def cleanup_procs_and_nuke(filestr)
       begin
-        run_sv_command("stop") 
+        run_sv_command("stop")
       rescue SystemExit
       end
 
@@ -193,13 +193,13 @@ module Omnibus
       rescue SystemExit
       end
 
-      run_command("pkill -HUP -u #{kill_users.join(',')}") if kill_users.length > 0 
+      run_command("pkill -HUP -u #{kill_users.join(',')}") if kill_users.length > 0
       run_command("pkill -HUP -f 'runsvdir -P #{service_path}'")
       sleep 3
-      run_command("pkill -TERM -u #{kill_users.join(',')}") if kill_users.length > 0 
+      run_command("pkill -TERM -u #{kill_users.join(',')}") if kill_users.length > 0
       run_command("pkill -TERM -f 'runsvdir -P #{service_path}'")
       sleep 3
-      run_command("pkill -KILL -u #{kill_users.join(',')}") if kill_users.length > 0 
+      run_command("pkill -KILL -u #{kill_users.join(',')}") if kill_users.length > 0
       run_command("pkill -KILL -f 'runsvdir -P #{service_path}'")
 
       get_all_services.each do |die_daemon_die|
@@ -227,7 +227,7 @@ module Omnibus
     end
 
     def get_all_services
-      get_all_services_files.map { |f| File.basename(f) } 
+      get_all_services_files.map { |f| File.basename(f) }
     end
 
     def service_enabled?(service_name)
@@ -306,7 +306,7 @@ module Omnibus
           log "#{service_name} disabled, not stopping"
           exit_status = 1
         end
-      end 
+      end
       exit! exit_status
     end
 
@@ -332,7 +332,7 @@ module Omnibus
 
       if args.length > 1 && command_map[command_to_run][:arity] != 2
         log "The command #{command_to_run} does not accept any arguments"
-        exit! 2 
+        exit! 2
       end
 
       method_to_call = command_to_run.gsub(/-/, '_')
