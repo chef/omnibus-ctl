@@ -130,7 +130,7 @@ module Omnibus
     end
 
     def add_command(name, description, arity=1, &block) 
-      @command_map[name] = { :desc => description }
+      @command_map[name] = { :desc => description, :arity => arity }
       metaclass = class << self; self; end
       metaclass.send(:define_method, name.to_sym) { |*args| block.call(*args) }
     end
