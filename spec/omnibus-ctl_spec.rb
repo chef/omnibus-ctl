@@ -5,9 +5,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ describe Omnibus::Ctl do
           restart
           once
           hup
-          term 
+          term
           int
           kill
           graceful-kill
@@ -122,7 +122,7 @@ describe Omnibus::Ctl do
     it "exits 2 if the command is found, but not with the arity you provided on the cli" do
       exit_code = nil
       begin
-        @ctl.run(["not-found", "reconfigure"])
+        @ctl.run(["reconfigure","not-found"])
       rescue SystemExit => e
         exit_code = e.status
       end
@@ -131,25 +131,32 @@ describe Omnibus::Ctl do
 
     it "runs the method describe by the command" do
       @ctl.stub(:exit!).and_return(true)
-      @ctl.should_receive(:help).with(["help"])
+      @ctl.should_receive(:help).with("help")
       @ctl.run(["help"])
     end
   end
 
   describe "load_files" do
-    it "loads the files in a path, and instance_evals them" do
+    before(:each) do
       @ctl.load_files(File.join(File.dirname(__FILE__), "data"))
+    end
+
+    it "loads the files in a path, and instance_evals them" do
       @ctl.extended
       @ctl.run(["extended"]).should == true
+      @ctl.run(["arity"]).should == true
     end
 
     it "should let you add to the help output" do
-      @ctl.load_files(File.join(File.dirname(__FILE__), "data"))
       @ctl.stub(:exit!).and_return(true)
       @ctl.help
       @ctl.fh_output.rewind
       output = @ctl.fh_output.gets(nil)
       output.should =~ /#{Regexp.escape("extended")}\n  #{Regexp.escape("Extended omnibus-ctl")}/
+    end
+
+    it "should let a loaded command declare arity" do
+      @ctl.run(["arity", "some-arg"]).should == true
     end
   end
 
