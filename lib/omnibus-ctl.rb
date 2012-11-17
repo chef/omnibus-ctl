@@ -227,7 +227,7 @@ module Omnibus
     end
 
     def get_all_services
-      get_all_services_files.map { |f| File.basename(f) }
+      get_all_services_files.map { |f| File.basename(f) }.sort
     end
 
     def service_enabled?(service_name)
