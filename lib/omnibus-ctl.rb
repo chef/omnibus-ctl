@@ -260,14 +260,18 @@ module Omnibus
 
     def show_config(*args)
       status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/show-config.json -l fatal")
-      exit! 0
+      if status.success?
+        exit! 0
+      else
+        exit! 1
+      end
     end
 
-    def reconfigure(*args)
+    def reconfigure(exit_on_success=true)
       status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/dna.json")
       if status.success?
         log "#{display_name} Reconfigured!"
-        exit! 0
+        exit! 0 if exit_on_success
       else
         exit! 1
       end
