@@ -132,7 +132,9 @@ module Omnibus
     def add_command(name, description, arity=1, &block)
       @command_map[name] = { :desc => description, :arity => arity }
       metaclass = class << self; self; end
-      metaclass.send(:define_method, name.to_sym) { |*args| block.call(*args) }
+      # Ruby does not like dashes in method names
+      method_name = name.gsub(/-/, "_")
+      metaclass.send(:define_method, method_name.to_sym) { |*args| block.call(*args) }
     end
 
     def exit!(error_code)
@@ -248,16 +250,28 @@ module Omnibus
       exit! exit_status
     end
 
-    def show_config(*args)
-      status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/show-config.json -l fatal")
-      exit! 0
+    def running_config
+      @running_config ||= begin
+        if File.exists?("#{etc_path}/chef-server-running.json")
+          JSON.parse(File.read("#{etc_path}/chef-server-running.json"))
+        end
+      end
     end
 
-    def reconfigure(*args)
+    def show_config(*args)
+      status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/show-config.json -l fatal")
+      if status.success?
+        exit! 0
+      else
+        exit! 1
+      end
+    end
+
+    def reconfigure(exit_on_success=true)
       status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/dna.json")
       if status.success?
         log "#{display_name} Reconfigured!"
-        exit! 0
+        exit! 0 if exit_on_success
       else
         exit! 1
       end
@@ -320,6 +334,11 @@ module Omnibus
     end
 
     def run(args)
+      # Ensure Omnibus related binaries are in the PATH
+      ENV["PATH"] = [File.join(base_path, "bin"),
+                     File.join(base_path, "embedded","bin"),
+                     ENV['PATH']].join(":")
+
       command_to_run = args[0]
 
       if !command_map.has_key?(command_to_run)
