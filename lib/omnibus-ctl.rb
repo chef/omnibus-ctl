@@ -334,6 +334,11 @@ module Omnibus
     end
 
     def run(args)
+      # Ensure Omnibus related binaries are in the PATH
+      ENV["PATH"] = [File.join(base_path, "bin"),
+                     File.join(base_path, "embedded","bin"),
+                     ENV['PATH']].join(":")
+
       command_to_run = args[0]
 
       if !command_map.has_key?(command_to_run)
