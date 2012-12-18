@@ -250,6 +250,14 @@ module Omnibus
       exit! exit_status
     end
 
+    def running_config
+      @running_config ||= begin
+        if File.exists?("#{etc_path}/chef-server-running.json")
+          JSON.parse(File.read("#{etc_path}/chef-server-running.json"))
+        end
+      end
+    end
+
     def show_config(*args)
       status = run_command("#{base_path}/bin/chef-solo -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/show-config.json -l fatal")
       exit! 0
