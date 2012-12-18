@@ -158,6 +158,10 @@ describe Omnibus::Ctl do
     it "should let a loaded command declare arity" do
       @ctl.run(["arity", "some-arg"]).should == true
     end
+
+    it "should allow loaded commands with dashes in the name" do
+      @ctl.run(["name-with-dashes"]).should == true
+    end
   end
 
 end

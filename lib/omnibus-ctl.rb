@@ -132,7 +132,9 @@ module Omnibus
     def add_command(name, description, arity=1, &block)
       @command_map[name] = { :desc => description, :arity => arity }
       metaclass = class << self; self; end
-      metaclass.send(:define_method, name.to_sym) { |*args| block.call(*args) }
+      # Ruby does not like dashes in method names
+      method_name = name.gsub(/-/, "_")
+      metaclass.send(:define_method, method_name.to_sym) { |*args| block.call(*args) }
     end
 
     def exit!(error_code)
