@@ -11,14 +11,12 @@ Gem::Specification.new do |s|
   s.summary     = %q{Provides command line control for omnibus packages}
   s.description = %q{Provides command line control for omnibus pakcages, rarely used as a gem}
 
-  s.rubyforge_project = "omnibus-ctl"
-
-  s.files         = `git ls-files`.split("\n")
-  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
-  s.require_paths = ["lib"]
-
   # specify any dependencies here; for example:
   s.add_development_dependency "rspec"
-  # s.add_runtime_dependency "rest-client"
+  s.add_development_dependency "rspec_junit_formatter"
+
+  s.bindir       = "bin"
+  s.executables  = 'omnibus-ctl'
+  s.require_path = 'lib'
+  s.files = %w(README.md) + Dir.glob("lib/**/*")
 end
