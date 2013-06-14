@@ -52,7 +52,7 @@ module Omnibus
           :arity => 1
         },
         "cleanse" => {
-          :desc => "Delete *all* private chef data, and start from scratch.",
+          :desc => "Delete *all* #{display_name} data, and start from scratch.",
           :arity => 2
         },
         "uninstall" => {
