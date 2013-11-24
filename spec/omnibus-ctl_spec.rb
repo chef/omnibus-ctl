@@ -24,6 +24,9 @@ describe Omnibus::Ctl do
           cleanse
           uninstall
           service-list
+          help
+  }
+  service_commands = %w{
           status
           tail
           start
@@ -35,8 +38,9 @@ describe Omnibus::Ctl do
           int
           kill
           graceful-kill
-          help
   }
+
+  all_commands = standard_commands + service_commands
 
   before(:each) do
     @ctl = Omnibus::Ctl.new("chef-server")
@@ -55,6 +59,10 @@ describe Omnibus::Ctl do
     it "sets the fh_output to STDOUT" do
       Omnibus::Ctl.new("chef-server").fh_output.should === STDOUT
     end
+
+    it "by default controls services" do
+      Omnibus::Ctl.new("chef-server").service_commands?.should == true
+    end
   end
 
   describe "command_map" do
@@ -64,9 +72,40 @@ describe Omnibus::Ctl do
       end
     end
 
+    service_commands.each do |cmd|
+      it "has #{cmd} by default" do
+        @ctl.command_map.has_key?(cmd).should == true
+      end
+    end
+
     it "has no commands that are not tested by default" do
       @ctl.command_map.each_key do |cmd|
-        standard_commands.include?(cmd).should == true
+        all_commands.include?(cmd).should == true
+      end
+    end
+
+    describe "without service commands" do
+      before(:each) do
+        @ctl = Omnibus::Ctl.new("chef-server", false)
+        @ctl.fh_output = StringIO.new
+      end
+
+      standard_commands.each do |cmd|
+        it "has #{cmd} by default" do
+          @ctl.command_map.has_key?(cmd).should == true
+        end
+      end
+
+      service_commands.each do |cmd|
+        it "does not have has #{cmd} by default" do
+          @ctl.command_map.has_key?(cmd).should == false
+        end
+      end
+
+      it "has no commands that are not tested by default" do
+        @ctl.command_map.each_key do |cmd|
+          standard_commands.include?(cmd).should == true
+        end
       end
     end
   end
@@ -80,13 +119,40 @@ describe Omnibus::Ctl do
   end
 
   describe "help" do
-    standard_commands.each do |cmd|
+    all_commands.each do |cmd|
       it "prints the #{cmd} command and description" do
         @ctl.stub(:exit!).and_return(true)
         @ctl.help
         @ctl.fh_output.rewind
         output = @ctl.fh_output.gets(nil)
         output.should =~ /#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.command_map[cmd][:desc])}/
+      end
+    end
+
+    describe "without service commands" do
+      before(:each) do
+        @ctl = Omnibus::Ctl.new("chef-server", false)
+        @ctl.fh_output = StringIO.new
+      end
+
+      standard_commands.each do |cmd|
+        it "prints the #{cmd} command and description" do
+          @ctl.stub(:exit!).and_return(true)
+          @ctl.help
+          @ctl.fh_output.rewind
+          output = @ctl.fh_output.gets(nil)
+          output.should =~ /#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.command_map[cmd][:desc])}/
+        end
+      end
+
+      service_commands.each do |cmd|
+        it "does not print the #{cmd} command and description" do
+          @ctl.stub(:exit!).and_return(true)
+          @ctl.help
+          @ctl.fh_output.rewind
+          output = @ctl.fh_output.gets(nil)
+          output.should_not =~ /#{Regexp.escape(cmd)}\n/
+        end
       end
     end
 
