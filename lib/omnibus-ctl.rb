@@ -30,8 +30,9 @@ module Omnibus
 
     attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path, :service_path, :etc_path, :data_path, :log_path, :command_map, :fh_output, :kill_users
 
-    def initialize(name)
+    def initialize(name, service_commands=true)
       @name = name
+      @service_commands = service_commands
       @display_name = name
       @base_path = "/opt/#{name}"
       @sv_path = File.join(@base_path, "sv")
@@ -59,6 +60,12 @@ module Omnibus
           :arity => 1,
           :desc => "Kill all processes and uninstall the process supervisor (data will be preserved)."
         },
+        "help" => {
+          :arity => 1,
+          :desc => "Print this help message."
+        }
+      }
+      service_command_map = {
         "service-list" => {
           :arity => 1,
           :desc => "List all the services (enabled services appear with a *.)"
@@ -106,12 +113,9 @@ module Omnibus
         "graceful-kill" => {
           :desc => "Attempt a graceful stop, then SIGKILL the entire process group.",
           :arity => 2
-        },
-        "help" => {
-          :arity => 1,
-          :desc => "Print this help message."
         }
       }
+      @command_map.merge!(service_command_map) if service_commands?
     end
 
     SV_COMMAND_NAMES.each do |sv_cmd|
@@ -121,6 +125,10 @@ module Omnibus
         run_sv_command(*args)
       end
       EOH
+    end
+
+    def service_commands?
+      @service_commands
     end
 
     def load_files(path)
