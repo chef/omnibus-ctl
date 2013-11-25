@@ -60,16 +60,16 @@ module Omnibus
           :arity => 1,
           :desc => "Kill all processes and uninstall the process supervisor (data will be preserved)."
         },
-        "service-list" => {
-          :arity => 1,
-          :desc => "List all the services (enabled services appear with a *.)"
-        },
         "help" => {
           :arity => 1,
           :desc => "Print this help message."
         }
       }
       service_command_map = {
+        "service-list" => {
+          :arity => 1,
+          :desc => "List all the services (enabled services appear with a *.)"
+        },
         "status" => {
           :desc => "Show the status of all the services.",
           :arity => 2

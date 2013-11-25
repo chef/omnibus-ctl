@@ -23,10 +23,10 @@ describe Omnibus::Ctl do
           reconfigure
           cleanse
           uninstall
-          service-list
           help
   }
   service_commands = %w{
+          service-list
           status
           tail
           start
