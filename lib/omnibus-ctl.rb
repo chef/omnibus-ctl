@@ -354,6 +354,11 @@ module Omnibus
       end
     end
 
+    # If it begins with a '-', it is an option.
+    def is_option?(arg)
+      arg && arg[0] == '-'
+    end
+
     def run(args)
       # Ensure Omnibus related binaries are in the PATH
       ENV["PATH"] = [File.join(base_path, "bin"),
@@ -361,8 +366,21 @@ module Omnibus
                      ENV['PATH']].join(":")
 
       command_to_run = args[0]
-      service = args[1]
+
+      # This piece of code checks if the argument is an option. If it is,
+      # then it sets service to nil and adds the argument into the options
+      # argument. This is ugly. A better solution is having a proper parser.
+      # But if we are going to implement a proper parser, we might as well
+      # port this to Thor rather than reinventing Thor. For now, this preserves
+      # the behavior to complain and exit with an error if one attempts to invoke
+      # a pcc command that does not accept an argument. Like "help".
       options = args[2..-1] || []
+      if is_option?(args[1])
+        options.unshift(args[1])
+        service = nil
+      else
+        service = args[1]
+      end
 
       if !command_map.has_key?(command_to_run)
         log "I don't know that command."
