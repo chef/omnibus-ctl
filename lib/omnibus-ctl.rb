@@ -29,7 +29,7 @@ module Omnibus
                       force-reload force-restart force-shutdown check]
 
     attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path, :service_path, :etc_path, :data_path, :log_path,
-                  :command_map, :fh_output, :kill_users, :verbose
+                  :command_map, :fh_output, :kill_users, :verbose, :log_path_exclude
 
     def initialize(name, service_commands=true)
       @name = name
@@ -41,7 +41,8 @@ module Omnibus
       @log_path = "/var/log/#{name}"
       @data_path = "/var/opt/#{name}"
       @etc_path = "/etc/#{name}"
-      @log_exclude = '(lock|@)'
+      @log_exclude = '(lock|@|gzip|tgz)'
+      @log_path_exclude = ['*/sasl/*']
       @fh_output = STDOUT
       @kill_users = []
       @verbose = false
@@ -288,11 +289,14 @@ module Omnibus
     end
 
     def tail(*args)
-      if args[1]
-        system("find #{log_path}/#{args[1]} -type f | grep -E -v '#{log_exclude}' | xargs tail --follow=name --retry")
-      else
-        system("find #{log_path} -type f | grep -E -v '#{log_exclude}' | xargs tail --follow=name --retry")
-      end
+      # find /var/log -type f -not -path '*/sasl/*' | grep -E -v '(lock|@|tgz|gzip)' | xargs tail --follow=name --retry
+      command = "find #{log_path}"
+      command << "/#{args[1]}" if args[1]
+      command << ' -type f'
+      command << log_path_exclude.map { |path| " -not -path #{path}" }.join(' ')
+      command << " | grep -E -v '#{log_exclude}' | xargs tail --follow=name --retry"
+
+      system(command)
     end
 
     def is_integer?(string)
