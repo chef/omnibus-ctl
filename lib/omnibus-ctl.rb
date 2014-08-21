@@ -250,6 +250,7 @@ module Omnibus
       exit_status = 0
       get_all_services.each do |service_name|
         next if !service.nil? && service_name != service
+        next if service_name == "keepalived" && service != "keepalived" && sv_cmd != "status"
         if service_enabled?(service_name)
           status = run_command("#{base_path}/init/#{service_name} #{sv_cmd}")
           exit_status = status.exitstatus if exit_status == 0 && !status.success?
