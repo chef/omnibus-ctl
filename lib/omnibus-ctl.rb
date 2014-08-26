@@ -297,8 +297,16 @@ module Omnibus
     # removed services are configured via the attributes file in
     # the main omnibus cookbook
     def removed_services
-      key = package_name.gsub(/-/, '_')
-      running_config[key]["removed_services"] || []
+      # in the case that there is no running_config (the config file does
+      # not exist), we know that this will be a new server, and we don't
+      # have to worry about pre-upgrade services hanging around. We can safely
+      # return an empty array when running_config is nil
+      if (cfg = running_config)
+        key = package_name.gsub(/-/, '_')
+        cfg[key]["removed_services"] || []
+      else
+        []
+      end
     end
 
     # translate the name from the config to the package name.
@@ -314,6 +322,7 @@ module Omnibus
       end
     end
 
+    # returns nil when chef-server-running.json does not exist
     def running_config
       @running_config ||= begin
         if File.exists?("#{etc_path}/chef-server-running.json")

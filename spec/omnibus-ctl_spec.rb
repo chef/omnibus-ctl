@@ -477,6 +477,59 @@ describe Omnibus::Ctl do
         @ctl.removed_services.should eq([])
       end
     end
+
+    context "when #running_config returns nil" do
+      before(:each) do
+        @ctl.stub(:running_config).and_return(nil)
+      end
+
+      it "should return an empty array" do
+        @ctl.removed_services.should eq([])
+      end
+    end
+  end
+
+  describe "running_config" do
+    let(:file_path) { "/etc/chef-server/chef-server-running.json" }
+    let(:file_contents) do
+      <<EOF
+{"chef_server": {"attr1":true,"removed_services":["sv1","sv2"]}}
+EOF
+end
+
+    it "checks if the file exists" do
+      File.should_receive(:exists?).with(file_path).and_return(false)
+      @ctl.running_config
+    end
+
+    context "when the file exists" do
+      before(:each) do
+        File.stub(:exists?).and_return(true)
+      end
+
+      it "should return the parsed contents of the file" do
+        File
+          .should_receive(:read)
+          .with(file_path)
+          .and_return(file_contents)
+        expected = { "chef_server" =>
+          { "attr1" => true,
+            "removed_services" => ["sv1", "sv2"]
+          }
+        }
+        @ctl.running_config.should eq(expected)
+      end
+    end
+
+    context "when the file doesn't exist" do
+      before(:each) do
+        File.stub(:exists?).and_return(false)
+      end
+
+      it "should return nil" do
+        @ctl.running_config.should eq(nil)
+      end
+    end
   end
 
   describe "package_name" do
