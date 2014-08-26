@@ -230,4 +230,326 @@ describe Omnibus::Ctl do
     end
   end
 
+  describe "run_sv_command" do
+    before(:each) do
+      @ctl.stub(:get_all_services).and_return(["erchef", "chef-solr"])
+      @ctl.stub(:global_service_command_permitted).and_return(true)
+      @ctl.stub(:exit!).and_return(true)
+    end
+
+    context "without a service" do
+      it "should run the command against all services" do
+        ["erchef", "chef-solr"].each do |service|
+          @ctl
+            .should_receive(:run_sv_command_for_service)
+            .with("stop", service)
+            .and_return(0)
+        end
+        @ctl.run_sv_command("stop")
+      end
+
+      it "exits with the sum of all the status codes" do
+        ["erchef", "chef-solr"].each do |service|
+          @ctl
+            .should_receive(:run_sv_command_for_service)
+            .with("status", service)
+            .and_return(1)
+        end
+        @ctl.should_receive(:exit!).with(2)
+        @ctl.run_sv_command("status")
+      end
+
+      it "should check the command is permitted globally" do
+        ["erchef", "chef-solr"].each do |service|
+          @ctl
+            .should_receive(:global_service_command_permitted)
+            .with("status", service)
+            .and_return(true)
+          @ctl
+            .should_receive(:run_sv_command_for_service)
+            .with("status", service)
+            .and_return(0)
+        end
+        @ctl.run_sv_command("status")
+      end
+
+      context "when the command is not permitted globally" do
+        before(:each) do
+          @ctl.stub(:global_service_command_permitted).and_return(false)
+        end
+
+        it "should not execute the service command" do
+          @ctl.should_not_receive(:run_sv_command_for_service)
+          @ctl.run_sv_command("status")
+        end
+      end
+    end
+
+    context "with a service" do
+      it "should run the command against just one service" do
+        @ctl
+          .should_receive(:run_sv_command_for_service)
+          .with("stop", "erchef")
+          .and_return(0)
+        @ctl
+          .should_not_receive(:run_sv_command_for_servcie)
+          .with("stop", "chef_solr")
+        @ctl.run_sv_command("stop", "erchef")
+      end
+
+      it "exits with the status code of the service command" do
+        @ctl
+          .should_receive(:run_sv_command_for_service)
+          .with("status", "erchef")
+          .and_return(3)
+        @ctl.should_receive(:exit!).with(3)
+        @ctl.run_sv_command("status", "erchef")
+      end
+
+      it "should not check if the service is permitted globally" do
+        @ctl.should_not_receive(:global_service_command_permitted)
+        @ctl
+          .should_receive(:run_sv_command_for_service)
+          .with("status", "erchef")
+          .and_return(0)
+        @ctl.run_sv_command("status", "erchef")
+      end
+    end
+  end
+
+  describe "run_sv_command_for_service" do
+    before(:each) do
+      @status = mock(Process::Status)
+      @status.stub(:exitstatus).and_return(0)
+    end
+
+    context "when service is enabled" do
+      before(:each) do
+        @ctl.stub(:service_enabled?).and_return(true)
+      end
+
+      it "runs the service command from init" do
+        @ctl
+          .should_receive(:run_command)
+          .with("/opt/chef-server/init/erchef start")
+          .and_return(@status)
+        @ctl.run_sv_command_for_service("start", "erchef")
+      end
+
+      it "returns the status code of the service command" do
+        @ctl.stub(:run_command).and_return(@status)
+        @ctl.run_sv_command_for_service("start", "erchef").should eq(0)
+      end
+
+      context "when the command fails" do
+        it "should return a non-zero status code" do
+          @status.stub(:exitstatus).and_return(3)
+          @ctl.stub(:run_command).and_return(@status)
+          @ctl.run_sv_command_for_service("start", "erchef").should eq(3)
+        end
+      end
+    end
+
+    context "when the service is disabled" do
+      before(:each) do
+        @ctl.stub(:service_enabled?).and_return(false)
+      end
+
+      context "and the sv_cmd is 'status'" do
+        it "should not run the 'status' command" do
+          @ctl.should_not_receive(:run_command)
+          @ctl.run_sv_command_for_service("status", "erchef")
+        end
+
+        it "should return 0" do
+          @ctl.run_sv_command_for_service("status", "erchef").should eq(0)
+        end
+
+        it "should not log that the service is disabled" do
+          @ctl.should_not_receive(:log)
+          @ctl.run_sv_command_for_service("status", "erchef")
+        end
+
+        context "and verbose logging is on" do
+          before(:each) do
+            @ctl.stub(:verbose).and_return(true)
+          end
+
+          it "should log that the service is disabled" do
+            @ctl
+              .should_receive(:log)
+              .with("erchef disabled")
+            @ctl.run_sv_command_for_service("status", "erchef")
+          end
+        end
+      end
+
+      ["start", "stop", "restart"].each do |sv_cmd|
+        context "and the sv_cmd is '#{sv_cmd}'" do
+          it "should not run the '#{sv_cmd}' command" do
+            @ctl.should_not_receive(:run_command)
+            @ctl.run_sv_command_for_service(sv_cmd, "erchef")
+          end
+
+          it "should return 0" do
+            @ctl.run_sv_command_for_service(sv_cmd, "erchef").should eq(0)
+          end
+
+          it "should not log that the service is disabled" do
+            @ctl.should_not_receive(:log)
+            @ctl.run_sv_command_for_service(sv_cmd, "erchef")
+          end
+
+          context "and verbose logging is on" do
+            before(:each) do
+              @ctl.stub(:verbose).and_return(true)
+            end
+
+            it "should not log that the service is disabled" do
+              @ctl.should_not_receive(:log)
+              @ctl.run_sv_command_for_service(sv_cmd, "erchef")
+            end
+          end
+        end
+      end
+    end
+  end
+
+  describe "global_service_command_permitted" do
+    let(:removed_services) { ["chef-gone", "chef-bye", "couchdb"] }
+
+    before(:each) do
+      @ctl.stub(:removed_services).and_return(removed_services)
+    end
+
+    context "for removed services" do
+      it "should only allow the stop command" do
+        invalid_commands = service_commands - ["stop"]
+        removed_services.product(invalid_commands).each do |svc, cmd|
+          @ctl.global_service_command_permitted(cmd, svc).should eq(false)
+        end
+        removed_services.product(["stop"]).each do |svc, cmd|
+          @ctl.global_service_command_permitted(cmd, svc).should eq(true)
+        end
+      end
+    end
+
+    context "for the keepalived service" do
+      it "should only allow the status command" do
+        invalid_commands = service_commands - ["status"]
+        invalid_commands.each do |cmd|
+          @ctl.global_service_command_permitted(cmd, "keepalived").should eq(false)
+        end
+        @ctl.global_service_command_permitted("status", "keepalived").should eq(true)
+      end
+    end
+
+    context "for other services" do
+      it "should allow all of the service commands" do
+        services = ["chef", "postgresql", "bookshelf"]
+        services.product(service_commands).each do |svc, cmd|
+          @ctl.global_service_command_permitted(cmd, svc).should eq(true)
+        end
+      end
+    end
+  end
+
+  describe "removed_services" do
+    it "should load the services from the running config" do
+      @ctl.should_receive(:running_config) do
+        {
+          "chef_server" => {
+            "removed_services" => ["couchdb", "mysql"]
+          }
+        }
+      end
+      @ctl.removed_services().should eq(["couchdb", "mysql"])
+    end
+
+    context "when removed services are not configured" do
+      before(:each) do
+        @ctl.stub(:running_config)  do
+          {"chef_server" => {}}
+        end
+      end
+
+      it "should return an empty array" do
+        @ctl.removed_services.should eq([])
+      end
+    end
+
+    context "when #running_config returns nil" do
+      before(:each) do
+        @ctl.stub(:running_config).and_return(nil)
+      end
+
+      it "should return an empty array" do
+        @ctl.removed_services.should eq([])
+      end
+    end
+  end
+
+  describe "running_config" do
+    let(:file_path) { "/etc/chef-server/chef-server-running.json" }
+    let(:file_contents) do
+      <<EOF
+{"chef_server": {"attr1":true,"removed_services":["sv1","sv2"]}}
+EOF
+end
+
+    it "checks if the file exists" do
+      File.should_receive(:exists?).with(file_path).and_return(false)
+      @ctl.running_config
+    end
+
+    context "when the file exists" do
+      before(:each) do
+        File.stub(:exists?).and_return(true)
+      end
+
+      it "should return the parsed contents of the file" do
+        File
+          .should_receive(:read)
+          .with(file_path)
+          .and_return(file_contents)
+        expected = { "chef_server" =>
+          { "attr1" => true,
+            "removed_services" => ["sv1", "sv2"]
+          }
+        }
+        @ctl.running_config.should eq(expected)
+      end
+    end
+
+    context "when the file doesn't exist" do
+      before(:each) do
+        File.stub(:exists?).and_return(false)
+      end
+
+      it "should return nil" do
+        @ctl.running_config.should eq(nil)
+      end
+    end
+  end
+
+  describe "package_name" do
+    context "when @name == 'opscode'" do
+      before(:each) do
+        @ctl.name = "opscode"
+      end
+
+      it "returns 'private-chef'" do
+        @ctl.package_name.should eq("private-chef")
+      end
+    end
+
+    context "for other names" do
+      it "should return the configured name" do
+        %w{chef-server opscode-manage opscode-analytics}.each do |package|
+          @ctl.name = package
+          @ctl.package_name.should eq(package)
+        end
+      end
+    end
+  end
 end
