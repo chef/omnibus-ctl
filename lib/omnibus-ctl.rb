@@ -249,17 +249,69 @@ module Omnibus
 
     def run_sv_command(sv_cmd, service=nil)
       exit_status = 0
-      get_all_services.each do |service_name|
-        next if !service.nil? && service_name != service
-        next if service_name == "keepalived" && service != "keepalived" && sv_cmd != "status"
-        if service_enabled?(service_name)
-          status = run_command("#{base_path}/init/#{service_name} #{sv_cmd}")
-          exit_status = status.exitstatus if exit_status == 0 && !status.success?
-        else
-          log "#{service_name} disabled" if sv_cmd == "status" && verbose
+      if service
+        exit_status += run_sv_command_for_service(sv_cmd, service)
+      else
+        get_all_services.each do |service_name|
+          exit_status += run_sv_command_for_service(sv_cmd, service_name) if global_service_command_permitted(sv_cmd, service_name)
         end
       end
       exit! exit_status
+    end
+
+    # run an sv command for a specific service name
+    def run_sv_command_for_service(sv_cmd, service_name)
+      if service_enabled?(service_name)
+        status = run_command("#{base_path}/init/#{service_name} #{sv_cmd}")
+        return status.exitstatus
+      else
+        log "#{service_name} disabled" if sv_cmd == "status" && verbose
+        return 0
+      end
+    end
+
+    # if we're running a global service command (like p-c-c status)
+    # across all of the services, there are certain cases where we
+    # want to prevent services files that exist in the service
+    # directory from being activated. This method is the logic that
+    # blocks those services
+    def global_service_command_permitted(sv_cmd, service_name)
+      # For services that have been removed, we only want to
+      # them to respond to the stop command. They should not show
+      # up in status, and they should not be started.
+      if removed_services.include?(service_name)
+        return sv_cmd == "stop"
+      end
+
+      # For keepalived, we only want it to respond to the status
+      # command when running global service commands like p-c-c start
+      # and p-c-c stop
+      if service_name == "keepalived"
+        return sv_cmd == "status"
+      end
+
+      # All other services respond normally to p-c-c * commands
+      return true
+    end
+
+    # removed services are configured via the attributes file in
+    # the main omnibus cookbook
+    def removed_services
+      key = package_name.gsub(/-/, '_')
+      running_config[key]["removed_services"] || []
+    end
+
+    # translate the name from the config to the package name.
+    # this is a special case for the private-chef package because
+    # it is configured to use the name and directory structure of
+    # 'opscode', not 'private-chef'
+    def package_name
+      case @name
+      when "opscode"
+        "private-chef"
+      else
+        @name
+      end
     end
 
     def running_config
