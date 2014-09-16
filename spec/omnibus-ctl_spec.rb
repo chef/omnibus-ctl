@@ -319,7 +319,7 @@ describe Omnibus::Ctl do
 
   describe "run_sv_command_for_service" do
     before(:each) do
-      @status = mock(Process::Status)
+      @status = double(Process::Status)
       @status.stub(:exitstatus).and_return(0)
     end
 
