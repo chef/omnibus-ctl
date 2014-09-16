@@ -417,9 +417,23 @@ describe Omnibus::Ctl do
 
   describe "global_service_command_permitted" do
     let(:removed_services) { ["chef-gone", "chef-bye", "couchdb"] }
+    let(:hidden_services)  { ["archer", "lana", "opscode-chef-mover"] }
 
     before(:each) do
       @ctl.stub(:removed_services).and_return(removed_services)
+      @ctl.stub(:hidden_services).and_return(hidden_services)
+    end
+
+    context "for hidden services" do
+      it "should allow all commands besides status" do
+        valid_commands = service_commands - ["status"]
+        hidden_services.product(["status"]).each do |svc, cmd|
+          @ctl.global_service_command_permitted(cmd, svc).should eq(false)
+        end
+        hidden_services.product(valid_commands).each do |svc, cmd|
+          @ctl.global_service_command_permitted(cmd, svc).should eq(true)
+        end
+      end
     end
 
     context "for removed services" do
