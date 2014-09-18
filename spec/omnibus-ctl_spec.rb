@@ -65,16 +65,45 @@ describe Omnibus::Ctl do
     end
   end
 
-  describe "command_map" do
+  describe "get_all_commands_hash" do
+    it "should return all the commands in a top-level hash" do
+
+      all_commands.each do |cmd|
+        @ctl.get_all_commands_hash.has_key?(cmd).should == true
+      end
+    end
+
+    describe "without service commands" do
+
+      before(:each) do
+        @ctl = Omnibus::Ctl.new("chef-server", false)
+        @ctl.fh_output = StringIO.new
+      end
+
+      it "should contain the service commands in the top-level of the result" do
+        standard_commands.each do |cmd|
+          @ctl.get_all_commands_hash.has_key?(cmd).should == true
+        end
+      end
+
+      it "should not contain the service commands in the top-level of the result" do
+        service_commands.each do |cmd|
+          @ctl.get_all_commands_hash.has_key?(cmd).should == false
+        end
+      end
+    end
+  end
+
+  describe "category_command_map" do
     standard_commands.each do |cmd|
-      it "has #{cmd} by default" do
-        @ctl.command_map.has_key?(cmd).should == true
+      it "has #{cmd} by default under general category" do
+        @ctl.category_command_map["general"].has_key?(cmd).should == true
       end
     end
 
     service_commands.each do |cmd|
-      it "has #{cmd} by default" do
-        @ctl.command_map.has_key?(cmd).should == true
+      it "has #{cmd} by default under service-management category" do
+        @ctl.category_command_map["service-management"].has_key?(cmd).should == true
       end
     end
 
@@ -91,19 +120,23 @@ describe Omnibus::Ctl do
       end
 
       standard_commands.each do |cmd|
-        it "has #{cmd} by default" do
-          @ctl.command_map.has_key?(cmd).should == true
+        it "has #{cmd} by default in general category" do
+          @ctl.category_command_map["general"].has_key?(cmd).should == true
         end
       end
 
       service_commands.each do |cmd|
-        it "does not have has #{cmd} by default" do
+        it "does not have service command #{cmd} by default" do
           @ctl.command_map.has_key?(cmd).should == false
         end
       end
 
+      it "should not have service-management category by default" do
+          @ctl.command_map.has_key?("service-management").should == false
+      end
+
       it "has no commands that are not tested by default" do
-        @ctl.command_map.each_key do |cmd|
+        @ctl.category_command_map["general"].each_key do |cmd|
           standard_commands.include?(cmd).should == true
         end
       end
@@ -125,7 +158,9 @@ describe Omnibus::Ctl do
         @ctl.help
         @ctl.fh_output.rewind
         output = @ctl.fh_output.gets(nil)
-        output.should =~ /#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.command_map[cmd][:desc])}/
+        # depending on whether or not the command has a category,
+        # it will have extra spaces
+        output.should =~ /  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/ 
       end
     end
 
@@ -141,7 +176,7 @@ describe Omnibus::Ctl do
           @ctl.help
           @ctl.fh_output.rewind
           output = @ctl.fh_output.gets(nil)
-          output.should =~ /#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.command_map[cmd][:desc])}/
+          output.should =~ /  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/ 
         end
       end
 
