@@ -30,7 +30,7 @@ module Omnibus
 
     attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path,
     :service_path, :etc_path, :data_path, :log_path, :command_map, :category_command_map,
-    :fh_output, :kill_users, :verbose, :log_path_exclude
+    :fh_output, :verbose, :log_path_exclude
 
     def initialize(name, service_commands=true)
       @name = name
@@ -45,7 +45,6 @@ module Omnibus
       @log_exclude = '(lock|@|gzip|tgz)'
       @log_path_exclude = ['*/sasl/*']
       @fh_output = STDOUT
-      @kill_users = []
       @verbose = false
       # backwards compat command map that does not have categories
       @command_map = { }
@@ -185,21 +184,6 @@ module Omnibus
       fh_output.puts msg
     end
 
-    def get_pgrp_from_pid(pid)
-      ps=`which ps`.chomp
-      `#{ps} -p #{pid} -o pgrp=`.chomp
-    end
-
-    def get_pids_from_pgrp(pgrp)
-      pgrep=`which pgrep`.chomp
-      `#{pgrep} -g #{pgrp}`.split(/\n/).join(" ")
-    end
-
-    def sigkill_pgrp(pgrp)
-      pkill=`which pkill`.chomp
-      run_command("#{pkill} -9 -g #{pgrp}")
-    end
-
     def run_command(command)
       system(command)
       $?
@@ -215,38 +199,17 @@ module Omnibus
     end
 
     def cleanup_procs_and_nuke(filestr)
-      begin
-        run_sv_command("stop")
-      rescue SystemExit
-      end
+      run_command("initctl stop #{name}-runsvdir")
 
       FileUtils.rm_f("/etc/init/#{name}-runsvdir.conf") if File.exists?("/etc/init/#{name}-runsvdir.conf")
       run_command("egrep -v '#{base_path}/embedded/bin/runsvdir-start' /etc/inittab > /etc/inittab.new && mv /etc/inittab.new /etc/inittab") if File.exists?("/etc/inittab")
-      run_command("kill -1 1")
+      run_command("kill -HUP 1")
 
       backup_dir = Time.now.strftime("/root/#{name}-cleanse-%FT%R")
       FileUtils.mkdir_p("/root") unless File.exists?("/root")
       FileUtils.rm_rf(backup_dir)
       FileUtils.cp_r(etc_path, backup_dir) if File.exists?(etc_path)
       run_command("rm -rf #{filestr}")
-
-      begin
-        graceful_kill
-      rescue SystemExit
-      end
-
-      run_command("pkill -HUP -u #{kill_users.join(',')}") if kill_users.length > 0
-      run_command("pkill -HUP -f 'runsvdir -P #{service_path}'")
-      sleep 3
-      run_command("pkill -TERM -u #{kill_users.join(',')}") if kill_users.length > 0
-      run_command("pkill -TERM -f 'runsvdir -P #{service_path}'")
-      sleep 3
-      run_command("pkill -KILL -u #{kill_users.join(',')}") if kill_users.length > 0
-      run_command("pkill -KILL -f 'runsvdir -P #{service_path}'")
-
-      get_all_services.each do |die_daemon_die|
-        run_command("pkill -KILL -f 'runsv #{die_daemon_die}'")
-      end
 
       log "Your config files have been backed up to #{backup_dir}."
       exit! 0
@@ -417,41 +380,6 @@ module Omnibus
 
     def is_integer?(string)
       return true if Integer(string) rescue false
-    end
-
-    def graceful_kill(*args)
-      service = args[1]
-      exit_status = 0
-      get_all_services.each do |service_name|
-        next if !service.nil? && service_name != service
-        if service_enabled?(service_name)
-          pidfile="#{sv_path}/#{service_name}/supervise/pid"
-          pid=File.read(pidfile).chomp if File.exists?(pidfile)
-          if pid.nil? || !is_integer?(pid)
-            log "could not find #{service_name} runit pidfile (service already stopped?), cannot attempt SIGKILL..."
-            status = run_command("#{base_path}/init/#{service_name} stop")
-            exit_status = status.exitstatus if exit_status == 0 && !status.success?
-            next
-          end
-          pgrp=get_pgrp_from_pid(pid)
-          if pgrp.nil? || !is_integer?(pgrp)
-            log "could not find pgrp of pid #{pid} (not running?), cannot attempt SIGKILL..."
-            status = run_command("#{base_path}/init/#{service_name} stop")
-            exit_status = status.exitstatus if exit_status == 0 && !status.success?
-            next
-          end
-          run_command("#{base_path}/init/#{service_name} stop")
-          pids=get_pids_from_pgrp(pgrp)
-          if !pids.empty?
-            log "found stuck pids still running in process group: #{pids}, sending SIGKILL" unless pids.empty?
-            sigkill_pgrp(pgrp)
-          end
-        else
-          log "#{service_name} disabled, not stopping"
-          exit_status = 1
-        end
-      end
-      exit! exit_status
     end
 
     def help(*args)
