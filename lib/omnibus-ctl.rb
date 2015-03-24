@@ -155,8 +155,12 @@ module Omnibus
 
     def load_files(path)
       Dir["#{path}/*.rb"].each do |file|
-        eval(IO.read(file))
+        load_file(file)
       end
+    end
+
+    def load_file(filepath)
+      eval(IO.read(filepath))
     end
 
     def add_command(name, description, arity=1, &block)
