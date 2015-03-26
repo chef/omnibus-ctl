@@ -385,7 +385,17 @@ module Omnibus
       end
     end
 
+    def remove_old_node_state
+      node_cache_path = "#{base_path}/embedded/nodes/"
+      status = run_command("rm -rf #{node_cache_path}")
+      if ! status.success?
+        log "Could not remove cached node state!"
+        exit! 1
+      end
+    end
+
     def show_config(*args)
+      remove_old_node_state
       status = run_command("#{base_path}/embedded/bin/chef-client -z -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/show-config.json -l fatal")
       if status.success?
         exit! 0
@@ -395,6 +405,7 @@ module Omnibus
     end
 
     def reconfigure(exit_on_success=true)
+      remove_old_node_state
       status = run_command("#{base_path}/embedded/bin/chef-client -z -c #{base_path}/embedded/cookbooks/solo.rb -j #{base_path}/embedded/cookbooks/dna.json")
       if status.success?
         log "#{display_name} Reconfigured!"
