@@ -1,5 +1,7 @@
 ## omnibus-ctl
 
+[![Build Status Master](https://travis-ci.org/chef/omnibus-ctl.svg?branch=master)](https://travis-ci.org/chef/omnibus-ctl)
+
 omnibus-ctl provides service control and configuration for omnibus packages.
 
 Not much to see here yet.
