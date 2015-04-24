@@ -1,32 +1,30 @@
-## omnibus-ctl
+# omnibus-ctl
 
 [![Build Status Master](https://travis-ci.org/chef/omnibus-ctl.svg?branch=master)](https://travis-ci.org/chef/omnibus-ctl)
 
 omnibus-ctl provides service control and configuration for omnibus packages.
 
-Not much to see here yet.
-
-### Run the Tests!
+## Run the Tests!
 
 There are tests in this repo that should be run before merging to master in the `spec` directory.
 
 To run them, first install rspec via bundler:
 
 ```
-bundle install --binstubs
+bundle install
 ```
 
 Then run the tests:
 
 ```
-./bin/rspec spec/
+bin/rspec
 ```
 
-### Framework API
+## Framework API
 
 There are two main functions you will use in your `*-ctl` project to add commands.
 
-#### add_command_under_category(string, string, string, int, ruby_block)
+### add_command_under_category(string, string, string, int, ruby_block)
 
 This method will add a new command to your ctl under a category, useful for grouping similar commands together logically in help output.
 
@@ -38,13 +36,13 @@ Input arguments:
 4. Arity. TODO: Due to current bug, this must be 2, I believe. We should fix this.
 5. Ruby block. Ruby code to be executed when your command is run (arguments to that command will be passed into the block).
 
-#### add_command(string, string, int, ruby_block)
+### add_command(string, string, int, ruby_block)
 
 This method will add a new command to your ctl without a category. It will be displayed above all categories when the help command is called.
 
 Input arguments are the same as `add_command_under_category` except 2 doesn't exist.
 
-#### Sample Output
+### Sample Output
 
 ```
 # sample-ctl help
@@ -67,11 +65,24 @@ Another Category:
 
 If you only use `add_command_under_category` to add your custom commands, everything will be outputted under a category.
 
-### Licensing
+## Releasing
+
+*NOTE: Versions prior to 0.3.6 do not use a "v" prefix for their tags. Current
+versions do.*
+
+* Update the version in lib/omnibus-ctl/version.rb.
+* Update the [Change log](CHANGELOG.md).
+* Commit those changes.
+* Make sure you are an owner of the
+  [omnibus-ctl gem on RubyGems.org](https://rubygems.org/gems/omnibus-ctl). If
+  you aren't, contact one of the owners to be added.
+* `rake release`. This will tag the version, push it to GitHub and RubyGems.
+
+## License
 
 See the LICENSE file for details.
 
-Copyright: Copyright (c) 2012 Opscode, Inc.
+Copyright: Copyright (c) 2012-2015 Chef Software, Inc.
 License: Apache License, Version 2.0
 
 Licensed under the Apache License, Version 2.0 (the "License");
