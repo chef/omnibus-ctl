@@ -4,6 +4,8 @@
 
 omnibus-ctl provides service control and configuration for omnibus packages.
 
+For an introduction, please see this blog post [Omnibus-ctl: What is it and what can it do for you?](https://www.chef.io/blog/2015/05/26/omnibus-ctl-what-is-it-and-what-can-it-do-for-you/).
+
 ## Run the Tests!
 
 There are tests in this repo that should be run before merging to master in the `spec` directory.
