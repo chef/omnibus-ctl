@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.name        = "omnibus-ctl"
   s.version     = Omnibus::Ctl::VERSION
   s.authors     = ["Opscode, Inc."]
-  s.email       = ["legal@opscode.com"]
-  s.homepage    = "http://github.com/opscode/omnibus-ctl"
+  s.email       = ["legal@chef.io"]
+  s.homepage    = "http://github.com/chef/omnibus-ctl"
   s.summary     = %q{Provides command line control for omnibus packages}
   s.description = %q{Provides command line control for omnibus pakcages, rarely used as a gem}
 

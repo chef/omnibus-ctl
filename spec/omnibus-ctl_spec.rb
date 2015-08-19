@@ -41,6 +41,22 @@ describe Omnibus::Ctl do
   }
 
   all_commands = standard_commands + service_commands
+  let(:file_path) { "/etc/chef-server/chef-server-running.json" }
+  let(:config_hash) do
+    { 'chef_server' => { 'attr1' => true,
+                         'removed_services' => ['sv1','sv2'],
+                         'service1' =>  {'test' => true  },
+                         'service2' =>  {'external' => true, 'test' => true  },
+                         'service3' =>  {'external' => false }
+                       }
+    }
+  end
+  let(:file_contents) { config_hash.to_json}
+
+  def ctl_output
+    @ctl.fh_output.rewind
+    @ctl.fh_output.gets(nil)
+  end
 
   before(:each) do
     @ctl = Omnibus::Ctl.new("chef-server")
@@ -62,6 +78,9 @@ describe Omnibus::Ctl do
 
     it "by default controls services" do
       expect(Omnibus::Ctl.new("chef-server").service_commands?).to eq(true)
+    end
+    it "sets a proper descriptive name when provided" do
+      expect(Omnibus::Ctl.new("chef-server", false, "Chef Server").display_name).to eq("Chef Server")
     end
   end
 
@@ -147,20 +166,17 @@ describe Omnibus::Ctl do
     it "puts to the fh_output" do
       @ctl.log("you really should see this!")
       @ctl.fh_output.rewind
-      expect(@ctl.fh_output.gets(nil)).to eq("you really should see this!\n")
+      expect(ctl_output).to eq("you really should see this!\n")
     end
   end
 
   describe "help" do
     all_commands.each do |cmd|
       it "prints the #{cmd} command and description" do
-        allow(@ctl).to receive(:exit!).and_return(true)
         @ctl.help
-        @ctl.fh_output.rewind
-        output = @ctl.fh_output.gets(nil)
         # depending on whether or not the command has a category,
         # it will have extra spaces
-        expect(output).to match(/  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/) 
+        expect(ctl_output).to match(/  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/)
       end
     end
 
@@ -172,66 +188,67 @@ describe Omnibus::Ctl do
 
       standard_commands.each do |cmd|
         it "prints the #{cmd} command and description" do
-          allow(@ctl).to receive(:exit!).and_return(true)
           @ctl.help
-          @ctl.fh_output.rewind
-          output = @ctl.fh_output.gets(nil)
-          expect(output).to match(/  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/) 
+          expect(ctl_output).to match(/  #{Regexp.escape(cmd)}\n    #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}|#{Regexp.escape(cmd)}\n  #{Regexp.escape(@ctl.get_all_commands_hash[cmd][:desc])}/)
         end
       end
 
       service_commands.each do |cmd|
         it "does not print the #{cmd} command and description" do
-          allow(@ctl).to receive(:exit!).and_return(true)
           @ctl.help
-          @ctl.fh_output.rewind
-          output = @ctl.fh_output.gets(nil)
-          expect(output).not_to match(/#{Regexp.escape(cmd)}\n/)
+          expect(ctl_output).not_to match(/#{Regexp.escape(cmd)}\n/)
         end
       end
     end
 
-    it "exits 1" do
-      expect { @ctl.help }.to raise_error(SystemExit)
+    it "exits 0" do
+      expect(@ctl.help).to eq(0)
     end
   end
+  describe "exit!" do before(:each) do
+      # These commands need to be defined in the context of Ctl
+      # in order to use the exit! function we define Ctl.
+      @ctl.load_file(File.join(File.dirname(__FILE__), "data", "extend.rb"))
+    end
 
-  describe "exit!" do
-    it "raises systemexit with the code specified" do
-      expect { @ctl.exit! 15 }.to raise_error(SystemExit)
-      exit_code = nil
-      begin
-        @ctl.exit! 15
-      rescue SystemExit => e
-        exit_code = e.status
+    it "when invoked will cause a command to raise systemexit upon completion for non-zero exit code" do
+      expect{@ctl.run(["exit-non-zero"])}.to raise_error do |error|
+        expect(error).to be_a(SystemExit)
+        expect(error.status).to eq(10)
       end
-      expect(exit_code).to eq(15)
+    end
+
+    it "when invoked by a  command, will cause that command to raise systemexit upon completion for zero exit code" do
+      expect{@ctl.run(["exit-zero"])}.to raise_error do |error|
+        expect(error).to be_a(SystemExit)
+        expect(error.status).to eq(0)
+      end
+    end
+    it "when not invoked by a command will cause that command to return its exit code without raising SystemExit" do
+      expect{@ctl.run(["clean-exit"])}.not_to raise_error
     end
   end
 
   describe "run" do
     it "exits 1 if the command is not found" do
-      exit_code = nil
       begin
         @ctl.run(["I-do-not-exist"])
       rescue SystemExit => e
-        exit_code = e.status
+       exit_code = e.status
       end
       expect(exit_code).to eq(1)
     end
 
     it "exits 2 if the command is found, but not with the arity you provided on the cli" do
-      exit_code = nil
       begin
-        @ctl.run(["reconfigure","not-found"])
+        @ctl.run(["reconfigure", "not-found"])
       rescue SystemExit => e
-        exit_code = e.status
+       exit_code = e.status
       end
       expect(exit_code).to eq(2)
     end
 
     it "runs the method describe by the command" do
-      allow(@ctl).to receive(:exit!).and_return(true)
       expect(@ctl).to receive(:help).with("help")
       @ctl.run(["help"])
     end
@@ -249,7 +266,6 @@ describe Omnibus::Ctl do
     end
 
     it "should let you add to the help output" do
-      allow(@ctl).to receive(:exit!).and_return(true)
       @ctl.help
       @ctl.fh_output.rewind
       output = @ctl.fh_output.gets(nil)
@@ -269,7 +285,6 @@ describe Omnibus::Ctl do
     before(:each) do
       allow(@ctl).to receive(:get_all_services).and_return(["erchef", "chef-solr"])
       allow(@ctl).to receive(:global_service_command_permitted).and_return(true)
-      allow(@ctl).to receive(:exit!).and_return(true)
     end
 
     context "without a service" do
@@ -283,15 +298,14 @@ describe Omnibus::Ctl do
         @ctl.run_sv_command("stop")
       end
 
-      it "exits with the sum of all the status codes" do
+      it "returns the sum of all the status codes" do
         ["erchef", "chef-solr"].each do |service|
           expect(@ctl)
             .to receive(:run_sv_command_for_service)
             .with("status", service)
             .and_return(1)
         end
-        expect(@ctl).to receive(:exit!).with(2)
-        @ctl.run_sv_command("status")
+        expect(@ctl.run_sv_command("status")).to eq(2)
       end
 
       it "should check the command is permitted globally" do
@@ -332,13 +346,12 @@ describe Omnibus::Ctl do
         @ctl.run_sv_command("stop", "erchef")
       end
 
-      it "exits with the status code of the service command" do
+      it "returns the status code of the service command" do
         expect(@ctl)
           .to receive(:run_sv_command_for_service)
           .with("status", "erchef")
           .and_return(3)
-        expect(@ctl).to receive(:exit!).with(3)
-        @ctl.run_sv_command("status", "erchef")
+        expect(@ctl.run_sv_command("status", "erchef")).to eq(3)
       end
 
       it "should not check if the service is permitted globally" do
@@ -538,14 +551,224 @@ describe Omnibus::Ctl do
     end
   end
 
-  describe "running_config" do
-    let(:file_path) { "/etc/chef-server/chef-server-running.json" }
-    let(:file_contents) do
-      <<EOF
-{"chef_server": {"attr1":true,"removed_services":["sv1","sv2"]}}
-EOF
-end
 
+  context "command_pre_hook" do
+    it "gets correctly invoked before a valid command is run" do
+      expect(@ctl)
+          .to receive(:command_pre_hook)
+          .with("status", "service1")
+          .and_return(true)
+      expect(@ctl.run(["status", "service1"])).to eq(0)
+    end
+
+    it "when a pre-hook returns true, the original command is run" do
+      allow(@ctl)
+          .to receive(:command_pre_hook)
+          .with("reconfigure")
+          .and_return(true)
+      expect(@ctl)
+          .to receive(:reconfigure)
+      @ctl.run(["reconfigure"])
+    end
+
+    it "when a pre-hook returns false, the original command is not run and an exit is raised" do
+      allow(@ctl)
+            .to receive(:command_pre_hook)
+            .with("reconfigure")
+            .and_return(false)
+
+      expect(@ctl)
+          .to_not receive(:reconfigure)
+
+      expect{ @ctl.run(["reconfigure"]) }.to raise_error(SystemExit)
+    end
+
+  end
+  context "command_post_hook" do
+    it "gets invoked after a valid command is run successfully" do
+      allow(@ctl)
+            .to receive(:reconfigure)
+            .and_return(0)
+
+      expect(@ctl)
+            .to receive(:command_post_hook)
+            .with("reconfigure")
+
+      @ctl.run(["reconfigure"])
+
+    end
+    it "does not get invoked after a valid command is run unsuccessfully" do
+      allow(@ctl)
+            .to receive(:reconfigure)
+            .with("reconfigure")
+            .and_return(1)
+
+      expect(@ctl)
+            .to_not receive(:command_post_hook)
+            .with("reconfigure")
+
+      @ctl.run(["reconfigure"])
+
+    end
+    it "does not get invoked after an invalid command is attempted" do
+      expect(@ctl)
+            .to_not receive(:command_post_hook)
+      expect{@ctl.run(["nice-try"])}.to raise_error(SystemExit)
+    end
+  end
+
+
+  describe "cleanse" do
+    before(:each) do
+      # this is potentially destructive if run on a live system,
+      # not to mention loaded with sleeps - skip it.
+      allow(@ctl).to receive("cleanup_procs_and_nuke").and_return 0
+    end
+
+    it "should invoke the cleanse_post_hook" do
+      # No-op everything cleanup_procs_and_nuke wants to do, it's destructive:
+      expect(@ctl).to receive("command_post_hook")
+      @ctl.run(["cleanse", "yes"])
+    end
+
+    it "should invoke the scary_cleanse_warning" do
+      # No-op everything cleanup_procs_and_nuke wants to do, it's destructive:
+      expect(@ctl).to receive("scary_cleanse_warning")
+      @ctl.run(["cleanse", "yes"])
+    end
+
+    context "scary_cleanse_warning" do
+      before :each do
+        @ctl.fh_output = StringIO.new
+        # Never let the sleep happen
+        allow(@ctl).to receive(:sleep)
+      end
+
+      it "should always output a stop and read header, regardless of whether or not it's told to bypass delay" do
+        @ctl.scary_cleanse_warning("cleanse", "yes")
+        expect(ctl_output).to match(/STOP AND READ/)
+
+        @ctl.scary_cleanse_warning("cleanse")
+        expect(ctl_output).to match(/STOP AND READ/)
+      end
+
+      it "will output a last chance to stop and wait for 60s if not told 'yes'" do
+        expect(@ctl).to receive(:sleep)
+        @ctl.scary_cleanse_warning("cleanse")
+        expect(ctl_output).to match(/seconds to/)
+      end
+
+      it "will not output a last chance stop, nor will it wait for 60s if not told  'yes'" do
+        expect(@ctl).to_not receive(:sleep)
+        @ctl.scary_cleanse_warning("cleanse", "yes")
+        expect(ctl_output).to_not match(/seconds to/)
+      end
+
+      it "will warn that external data will be deleted when --with-external is specied" do
+        allow(ARGV).to receive("include?").with("--with-external").and_return true
+        @ctl.scary_cleanse_warning("cleanse")
+        expect(ctl_output).to match(/will also delete externally hosted/)
+      end
+
+      it "will not warn about deleting external data when --with-external is not set" do
+        @ctl.scary_cleanse_warning("cleanse")
+        expect(ctl_output).not_to match(/will also delete externally hosted/)
+      end
+
+      it "will suggest using --with-external if any external services exist and --with-external is not provided" do
+        allow(@ctl).to receive(:external_services).and_return({not: "empty"})
+        @ctl.scary_cleanse_warning("cleanse")
+        #expect(ctl_output).to match(/--with-external/)
+      end
+
+      it "will not mention --with-external if no external services exist" do
+        allow(@ctl).to receive(:external_services).and_return({})
+        @ctl.scary_cleanse_warning("cleanse")
+        expect(ctl_output).not_to match(/--with-external/)
+      end
+    end
+
+    context "cleanse_post_hook" do
+      before(:each) do
+        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:read).and_return(file_contents)
+      end
+
+      it "should not invoke cleanse_post_hook_service for any non-external services" do
+        # Make sure we don't bomb out on services that are defined true
+        @ctl.external_services.each_key do |service|
+          allow(@ctl).to receive("external_cleanse_#{service}").and_return 0
+        end
+        non_external = @ctl.running_package_config.select { |k, v| v.class == Hash and v["external"] == false }
+        non_external.each_key do |service|
+          expect(@ctl).to_not receive("external_cleanse_#{service}")
+        end
+        @ctl.run(["cleanse", "yes"])
+      end
+
+      it "invoked with --with-external should invoke cleanse_post_hook_'service' with true for each external service" do
+        @ctl.external_services.each_key do |name, config|
+          expect(@ctl).to receive("external_cleanse_#{name}").with(true)
+        end
+        allow(ARGV).to receive("include?").with("--with-external").and_return true
+        @ctl.run(["cleanse", "yes"])
+      end
+
+      it "invoked without --with-external should invoke cleanse_post_hook_'service' with false for each external service'" do
+        @ctl.external_services.each_key.each do |name|
+          expect(@ctl).to receive("external_cleanse_#{name}").with(false)
+        end
+        @ctl.run(["cleanse", "yes"])
+      end
+    end
+
+  end
+
+  describe "external_services" do
+    context "when there is a running_config" do
+      before(:each) do
+        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:read).and_return(file_contents)
+      end
+      it "contains only configuration entries with 'external=true' set" do
+        expect(@ctl.external_services.length).to eql(1)
+        @ctl.external_services.each do |name, settings|
+          expect(settings['external']).to eq(true)
+        end
+      end
+    end
+    context "when there is no running_config" do
+      before do
+        allow(@ctl).to receive(:running_config).and_return(nil)
+      end
+      it "replies with an empty hash" do
+        expect(@ctl.external_services.length).to eq(0)
+      end
+    end
+  end
+
+  describe "service_external?" do
+    before(:each) do
+      allow(File).to receive(:exists?).and_return(true)
+      allow(File).to receive(:read).and_return(file_contents)
+    end
+
+    it "replies 'true' when a service is not defined in config" do
+      expect(@ctl.service_external? "invalid-service").to eql(false)
+
+    end
+    it "replies 'true' when a service is defined in config with 'external = true'" do
+      expect(@ctl.service_external? "service2").to eql(true)
+    end
+    it "replies 'false' when a service is defined in config without specifying 'external'" do
+      expect(@ctl.service_external? "service1").to eql(false)
+    end
+    it "replies 'false' when a service is defined in config with 'external = false'" do
+      expect(@ctl.service_external? "service3").to eql(false)
+    end
+  end
+
+  describe "running_config" do
     it "checks if the file exists" do
       expect(File).to receive(:exists?).with(file_path).and_return(false)
       @ctl.running_config
@@ -561,12 +784,7 @@ end
           .to receive(:read)
           .with(file_path)
           .and_return(file_contents)
-        expected = { "chef_server" =>
-          { "attr1" => true,
-            "removed_services" => ["sv1", "sv2"]
-          }
-        }
-        expect(@ctl.running_config).to eq(expected)
+        expect(@ctl.running_config).to eq(config_hash)
       end
     end
 
@@ -579,8 +797,45 @@ end
         expect(@ctl.running_config).to eq(nil)
       end
     end
+
+
   end
 
+  context "running_package_config" do
+      before(:each) do
+        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:read).and_return(file_contents)
+      end
+      it "returns {} when the package name isn't present in config" do
+        allow(@ctl).to receive(:package_name).and_return('bad_package')
+        expect(@ctl.running_package_config).to eq({})
+      end
+      it "returns {} when there is no running config" do
+        allow(File).to receive(:exists?).and_return(false)
+        expect(@ctl.running_package_config).to eq({})
+      end
+      it "return the config hash when it can find the service key provided" do
+
+      end
+
+  end
+  context "running_service_config" do
+      before(:each) do
+        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:read).and_return(file_contents)
+      end
+
+      it "returns nil when it can't find the service key provided"  do
+        expect(@ctl.running_service_config('service9')) .to eq(nil)
+      end
+      it "returns nil when there is no running config" do
+        allow(File).to receive(:exists?).and_return(false)
+        expect(@ctl.running_service_config('service1')) .to eq(nil)
+      end
+      it "return the config hash when it can find the service key provided" do
+        expect(@ctl.running_service_config('service1')) .to eq(config_hash['chef_server']['service1'])
+      end
+  end
   describe "package_name" do
     context "when @name == 'opscode'" do
       before(:each) do
