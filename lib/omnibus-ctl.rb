@@ -278,7 +278,7 @@ EOM
         log <<EOM
     This will also delete externally hosted #{display_name} data.
     This means that any service you have configured as 'external'
-    will be have any #{display_name} permanently deleted.
+    will have any #{display_name} permanently deleted.
 EOM
       elsif (not external_services.empty?)
         log <<EOM
@@ -289,11 +289,11 @@ EOM
       end
 
       unless just_do_it
-        data = with_external ? "local, and remote data " : "and local data"
+        data = with_external ? "local, and remote data" : "and local data"
         log <<EOM
 
     You have 60 seconds to hit CTRL-C before configuration,
-    logs, #{data} for this application is permanently
+    logs, #{data} for this application are permanently
     deleted.
     *******************************************************************
 
@@ -453,8 +453,7 @@ EOM
     # If there is no running_config or is no matching key
     # it will return nil.
     def running_service_config(service)
-      svc = service.gsub(/-/, '_')
-      running_package_config[svc]
+      running_package_config[service]
     end
 
     def remove_old_node_state
@@ -658,22 +657,30 @@ EOM
       actual_args = [command_to_run, service].reject(&:nil?)
       if command_pre_hook(*actual_args)
         method_to_call = to_method_name(command_to_run)
-        # Some things
-        return_val = send(method_to_call, *actual_args)
-        exit_code = return_val
+        begin
+          return_val = send(method_to_call, *actual_args)
+          if return_val.kind_of?(Process::Status)
+            return_val = return_val.exitstatus
+          end
+          exit_code = return_val
+        rescue SystemExit => e
+          @force_exit = true
+          exit_code = e.status
+        end
         # only invoke post-hook if we didn't fail the main command
         # itself.  This is a best-guess - anything that we can't easily
         # determine to be an error, we'll allow to continue.
         # The post-hook return code will replace the original only if
         # it is numeric.
-        unless ((is_integer?(return_val) && return_val > 0) || return_val == false)
+        error_exit = (exit_code.kind_of?(Fixnum) && exit_code > 0) ||
+                     (return_val === false)
+        unless (error_exit)
           hook_exit_code = command_post_hook(*actual_args)
-          if is_integer? hook_exit_code
+          if hook_exit_code && hook_exit_code.kind_of?(Fixnum)
             exit_code = hook_exit_code
           end
         end
-        if exit_code == 0 or exit_code  == true
-        end
+        exit_code = return_val if exit_code.nil?
       else
         exit_code = 8
         @force_exit = true
