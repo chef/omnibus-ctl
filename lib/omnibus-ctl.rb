@@ -334,7 +334,7 @@ EOM
           exit_status += run_sv_command_for_service(sv_cmd, service_name) if global_service_command_permitted(sv_cmd, service_name)
         end
       end
-      exit_status
+      exit! exit_status
     end
 
     # run an sv command for a specific service name
@@ -662,11 +662,12 @@ EOM
           if return_val.kind_of?(Process::Status)
             return_val = return_val.exitstatus
           end
-          exit_code = return_val
+          exit_code = return_val unless return_val.nil?
         rescue SystemExit => e
           @force_exit = true
           exit_code = e.status
         end
+
         # only invoke post-hook if we didn't fail the main command
         # itself.  This is a best-guess - anything that we can't easily
         # determine to be an error, we'll allow to continue.
@@ -680,7 +681,6 @@ EOM
             exit_code = hook_exit_code
           end
         end
-        exit_code = return_val if exit_code.nil?
       else
         exit_code = 8
         @force_exit = true

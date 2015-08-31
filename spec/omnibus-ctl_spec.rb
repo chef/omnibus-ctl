@@ -252,6 +252,23 @@ describe Omnibus::Ctl do
       expect(@ctl).to receive(:help).with("help")
       @ctl.run(["help"])
     end
+
+    context "handles nil returns correctly" do
+      before (:each) do
+        @ctl.load_file(File.join(File.dirname(__FILE__), "data", "extend.rb"))
+      end
+
+      it "returns 0 if a called command returns nil" do
+        expect(@ctl.run(["return-nil"])).to eq(0)
+      end
+
+      it "raises a 0-value if called command force-exists with nil" do
+          expect{@ctl.run(["exit-nil"])}.to raise_error do |error|
+            expect(error).to be_a(SystemExit)
+            expect(error.status).to eq(0)
+          end
+      end
+    end
   end
 
   describe "load_files" do
@@ -298,15 +315,26 @@ describe Omnibus::Ctl do
         @ctl.run_sv_command("stop")
       end
 
-      it "returns the sum of all the status codes" do
-        ["erchef", "chef-solr"].each do |service|
-          expect(@ctl)
-            .to receive(:run_sv_command_for_service)
-            .with("status", service)
-            .and_return(1)
+      context "checking for status" do
+        before (:each) do
+          ["erchef", "chef-solr"].each do |service|
+            expect(@ctl)
+              .to receive(:run_sv_command_for_service)
+              .with("status", service)
+              .and_return(1)
+          end
         end
-        expect(@ctl.run_sv_command("status")).to eq(2)
+        it "returns the sum of all the status codes when invoked directly" do
+          expect(@ctl.run_sv_command("status")).to eq(2)
+        end
+        it "when invoked via 'run' it SystemExits with the sum of all status codes" do
+          expect{@ctl.run(["status"])}.to raise_error do |error|
+            expect(error).to be_a(SystemExit)
+            expect(error.status).to eq(2)
+          end
+        end
       end
+
 
       it "should check the command is permitted globally" do
         ["erchef", "chef-solr"].each do |service|
@@ -558,7 +586,10 @@ describe Omnibus::Ctl do
           .to receive(:command_pre_hook)
           .with("status", "service1")
           .and_return(true)
-      expect(@ctl.run(["status", "service1"])).to eq(0)
+      expect{@ctl.run(["status", "service1"])}.to raise_error do |error|
+        expect(error).to be_a(SystemExit)
+        expect(error.status).to eq(0)
+      end
     end
 
     it "when a pre-hook returns true, the original command is run" do
