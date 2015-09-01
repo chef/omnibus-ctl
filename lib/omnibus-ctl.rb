@@ -658,29 +658,13 @@ EOM
       if command_pre_hook(*actual_args)
         method_to_call = to_method_name(command_to_run)
         begin
-          return_val = send(method_to_call, *actual_args)
-          if return_val.kind_of?(Process::Status)
-            return_val = return_val.exitstatus
-          end
-          exit_code = return_val unless return_val.nil?
+          ret = send(method_to_call, *actual_args)
         rescue SystemExit => e
           @force_exit = true
-          exit_code = e.status
+          ret = e.status
         end
-
-        # only invoke post-hook if we didn't fail the main command
-        # itself.  This is a best-guess - anything that we can't easily
-        # determine to be an error, we'll allow to continue.
-        # The post-hook return code will replace the original only if
-        # it is numeric.
-        error_exit = (exit_code.kind_of?(Fixnum) && exit_code > 0) ||
-                     (return_val === false)
-        unless (error_exit)
-          hook_exit_code = command_post_hook(*actual_args)
-          if hook_exit_code && hook_exit_code.kind_of?(Fixnum)
-            exit_code = hook_exit_code
-          end
-        end
+        command_post_hook(*actual_args)
+        exit_code = ret unless ret.nil?
       else
         exit_code = 8
         @force_exit = true

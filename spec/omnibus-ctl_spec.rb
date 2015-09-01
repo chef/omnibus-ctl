@@ -617,33 +617,20 @@ describe Omnibus::Ctl do
   end
   context "command_post_hook" do
     it "gets invoked after a valid command is run successfully" do
-      allow(@ctl)
-            .to receive(:reconfigure)
-            .and_return(0)
+      allow(@ctl).to receive(:reconfigure).and_return(0)
+      expect(@ctl).to receive(:command_post_hook).with("reconfigure")
+      @ctl.run(["reconfigure"])
+    end
 
-      expect(@ctl)
-            .to receive(:command_post_hook)
-            .with("reconfigure")
-
+    it "gets invoked invoked after a valid command is run unsuccessfully" do
+      allow(@ctl).to receive(:reconfigure) .and_return(1)
+      expect(@ctl).to receive(:command_post_hook).with("reconfigure")
       @ctl.run(["reconfigure"])
 
     end
-    it "does not get invoked after a valid command is run unsuccessfully" do
-      allow(@ctl)
-            .to receive(:reconfigure)
-            .with("reconfigure")
-            .and_return(1)
 
-      expect(@ctl)
-            .to_not receive(:command_post_hook)
-            .with("reconfigure")
-
-      @ctl.run(["reconfigure"])
-
-    end
     it "does not get invoked after an invalid command is attempted" do
-      expect(@ctl)
-            .to_not receive(:command_post_hook)
+      expect(@ctl).to_not receive(:command_post_hook)
       expect{@ctl.run(["nice-try"])}.to raise_error(SystemExit)
     end
   end
