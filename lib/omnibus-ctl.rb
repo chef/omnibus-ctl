@@ -482,7 +482,7 @@ EOM
     end
 
     def show_config(*args)
-      status = run_chef("#{base_path}/embedded/cookbooks/show-config.json", "-l fatal")
+      status = run_chef("#{base_path}/embedded/cookbooks/show-config.json", "-l fatal -F null")
       exit! status.success? ? 0 : 1
     end
 
