@@ -25,7 +25,7 @@ module Omnibus
 
     SV_COMMAND_NAMES = %w[status up down once pause cont hup alarm interrupt quit
                       term kill start stop restart shutdown force-stop
-                      force-reload force-restart force-shutdown check]
+                      force-reload force-restart force-shutdown check usr1 usr2]
 
     attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path,
     :service_path, :etc_path, :data_path, :log_path, :command_map, :category_command_map,
@@ -129,6 +129,14 @@ module Omnibus
           },
           "graceful-kill" => {
             :desc => "Attempt a graceful stop, then SIGKILL the entire process group.",
+            :arity => 2
+          },
+          "usr1" => {
+            :desc => "Send the services a USR1.",
+            :arity => 2
+          },
+          "usr2" => {
+            :desc => "Send the services a USR2.",
             :arity => 2
           }
         }
@@ -327,6 +335,8 @@ EOM
 
     def run_sv_command(sv_cmd, service=nil)
       exit_status = 0
+      sv_cmd = "1" if sv_cmd == "usr1"
+      sv_cmd = "2" if sv_cmd == "usr2"
       if service
         exit_status += run_sv_command_for_service(sv_cmd, service)
       else
