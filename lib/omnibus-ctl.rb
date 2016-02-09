@@ -178,7 +178,7 @@ module Omnibus
     end
 
     def load_file(filepath)
-      eval(IO.read(filepath))
+      eval(IO.read(filepath), nil, filepath, 1)
     end
 
     def add_command(name, description, arity=1, &block)
