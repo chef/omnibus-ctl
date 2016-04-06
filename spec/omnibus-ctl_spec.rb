@@ -241,7 +241,7 @@ describe Omnibus::Ctl do
 
     it "exits 2 if the command is found, but not with the arity you provided on the cli" do
       begin
-        @ctl.run(["reconfigure", "not-found"])
+        @ctl.run(["uninstall", "not-found"])
       rescue SystemExit => e
        exit_code = e.status
       end
