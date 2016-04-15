@@ -18,6 +18,10 @@ require "omnibus-ctl/version"
 require 'json'
 require 'fileutils'
 
+# For license checks
+require 'io/console'
+require 'io/wait'
+
 module Omnibus
   class Ctl
 
@@ -65,7 +69,7 @@ module Omnibus
           },
           "reconfigure" => {
             :desc => "Reconfigure the application.",
-            :arity => 1
+            :arity => 2
           },
           "cleanse" => {
             :desc => "Delete *all* #{display_name} data, and start from scratch.",
@@ -496,7 +500,12 @@ EOM
       exit! status.success? ? 0 : 1
     end
 
-    def reconfigure(exit_on_success=true)
+    def reconfigure(*args)
+      # args being passed to this command does not include the ones that are
+      # starting with "-". See #is_option? method. If it is starting with "-"
+      # then it is treated as a option and we need to look for them in ARGV.
+      check_license_acceptance(ARGV.include?("--accept-license"))
+
       status = run_chef("#{base_path}/embedded/cookbooks/dna.json")
       if status.success?
         log "#{display_name} Reconfigured!"
@@ -504,6 +513,57 @@ EOM
       else
         exit! 1
       end
+    end
+
+    def check_license_acceptance(override_accept = false)
+      license_guard_file_path = File.join(data_path, ".license.accepted")
+
+      # If the project does not have a license we do not have
+      # any license to accept.
+      return unless File.exist?(project_license_path)
+
+      if !File.exist?(license_guard_file_path)
+        if override_accept || ask_license_acceptance
+          FileUtils.mkdir_p(data_path)
+          FileUtils.touch(license_guard_file_path)
+        else
+          log "Please accept the software license agreement to continue."
+          exit(1)
+        end
+      end
+    end
+
+    def ask_license_acceptance
+      log "To use this software, you must agree to the terms of the software license agreement."
+
+      if !STDIN.tty?
+        log "Please view and accept the software license agreement, or pass --accept-license."
+        exit(1)
+      end
+
+      log "Press any key to continue."
+      user_input = STDIN.getch
+      user_input << STDIN.getch while STDIN.ready?
+      # No need to check for user input
+
+      system("less #{project_license_path}")
+
+      loop do
+        log "Type 'yes' to accept the software license agreement, or anything else to cancel."
+
+        user_input = STDIN.gets.chomp.downcase
+        case user_input
+        when "yes"
+          return true
+        else
+          log "You have not accepted the software license agreement."
+          return false
+        end
+      end
+    end
+
+    def project_license_path
+      File.join(base_path, "LICENSE")
     end
 
     def tail(*args)
