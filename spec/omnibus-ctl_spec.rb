@@ -99,7 +99,7 @@ describe Omnibus::Ctl do
         @ctl.fh_output = StringIO.new
       end
 
-      it "should contain the service commands in the top-level of the result" do
+      it "should contain the standard commands in the top-level of the result" do
         standard_commands.each do |cmd|
           expect(@ctl.get_all_commands_hash.has_key?(cmd)).to eq(true)
         end
@@ -635,6 +635,36 @@ describe Omnibus::Ctl do
     end
   end
 
+  context "global pre hooks" do
+    before(:each) do
+      @ctl.load_file(File.join(File.dirname(__FILE__), "data", "global_pre_hook.rb"))
+    end
+
+    it "registers the global pre hooks" do
+      expect(@ctl.send(:instance_variable_get, :@global_pre_hooks).count)
+        .to eq(1)
+      @ctl.add_global_pre_hook("another-global-pre-hook") { true }
+      expect(@ctl.send(:instance_variable_get, :@global_pre_hooks).count)
+        .to eq(2)
+    end
+
+    it "invokes pre hooks before any command is run" do
+      expect(@ctl)
+        .to receive(:run_global_pre_hooks)
+        .and_return(true)
+      expect { @ctl.run(%w{status service1}) }
+        .to raise_error(SystemExit) { |e| expect(e.status).to eq(0) }
+    end
+
+    it "runs the desired command after the prehooks are run" do
+      allow(@ctl)
+        .to receive(:run_global_pre_hooks)
+        .and_return(true)
+      expect(@ctl)
+          .to receive(:reconfigure)
+      @ctl.run(%w{reconfigure})
+    end
+  end
 
   describe "cleanse" do
     before(:each) do

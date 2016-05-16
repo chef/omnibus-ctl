@@ -56,6 +56,7 @@ module Omnibus
       @quiet = false
       @exe_name = File.basename($0)
       @force_exit = false
+      @global_pre_hooks = {}
 
       # backwards compat command map that does not have categories
       @command_map = { }
@@ -151,6 +152,7 @@ module Omnibus
     def self.to_method_name(name)
       name.gsub(/-/, '_').to_sym
     end
+
     def to_method_name(name)
       Ctl.to_method_name(name)
     end
@@ -185,21 +187,22 @@ module Omnibus
       eval(IO.read(filepath), nil, filepath, 1)
     end
 
-    def add_command(name, description, arity=1, &block)
-      @command_map[name] = { :desc => description, :arity => arity }
-      metaclass = class << self; self; end
-      # Ruby does not like dashes in method names
-      method_name = to_method_name(name).to_sym
-      metaclass.send(:define_method, method_name) { |*args| block.call(*args) }
+    def add_command(name, description, arity = 1, &block)
+      @command_map[name] = { desc: description, arity: arity }
+      self.class.send(:define_method, to_method_name(name).to_sym, block)
     end
 
-    def add_command_under_category(name, category, description, arity=1, &block)
+    def add_command_under_category(name, category, description, arity = 1, &block)
       # add new category if it doesn't exist
-      @category_command_map[category] = {} unless @category_command_map.has_key?(category)
-      @category_command_map[category][name] = { :desc => description, :arity => arity }
-      metaclass = class << self; self; end
-      method_name = to_method_name(name).to_sym
-      metaclass.send(:define_method, method_name) { |*args| block.call(*args) }
+      @category_command_map[category] ||= {}
+      @category_command_map[category][name] = { desc: description, arity: arity }
+      self.class.send(:define_method, to_method_name(name).to_sym, block)
+    end
+
+    def add_global_pre_hook(name, &block)
+      method_name = to_method_name("#{name}_global_pre_hook").to_sym
+      @global_pre_hooks[name] = method_name
+      self.class.send(:define_method, method_name, block)
     end
 
     def exit!(code)
@@ -721,6 +724,8 @@ EOM
       @force_exit = false
       exit_code = 0
 
+      run_global_pre_hooks
+
       # Filter args to just command and service. If you are loading
       # custom commands and need access to the command line argument,
       # use ARGV directly.
@@ -744,6 +749,17 @@ EOM
         Kernel.exit exit_code
       else
         exit_code
+      end
+    end
+
+    def run_global_pre_hooks
+      @global_pre_hooks.each do |hook_name, method_name|
+        begin
+          send(method_name)
+        rescue => e
+          $stderr.puts("Global pre-hook '#{hook_name}' failed with: '#{e.message}'")
+          exit(1)
+        end
       end
     end
 
