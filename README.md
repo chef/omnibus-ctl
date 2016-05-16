@@ -22,7 +22,7 @@ Then run the tests:
 bin/rspec
 ```
 
-## Framework API
+## Command API
 
 There are two main functions you will use in your `*-ctl` project to add commands.
 
@@ -66,6 +66,27 @@ Another Category:
 ```
 
 If you only use `add_command_under_category` to add your custom commands, everything will be outputted under a category.
+
+## Pre-hook API
+
+### add_global_pre_hook(string, ruby_block)
+
+This method will add a global pre-hook block that will be executed before any
+*-ctl command is run. If the pre-hook raises an exception it will cause an early
+exit before the command is run.
+
+Input Arguments:
+
+1. Name of the hook
+1. Ruby block of the code to be executed.
+
+### Sample
+
+```ruby
+add_global_pre_hook "ensure that the user is always root" do
+  raise "You must run this command as root" unless Process.uid == 0
+end
+```
 
 ## Releasing
 

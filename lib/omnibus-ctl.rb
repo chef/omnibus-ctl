@@ -56,6 +56,7 @@ module Omnibus
       @quiet = false
       @exe_name = File.basename($0)
       @force_exit = false
+      @global_pre_hooks = {}
 
       # backwards compat command map that does not have categories
       @command_map = { }
@@ -196,6 +197,12 @@ module Omnibus
       @category_command_map[category] ||= {}
       @category_command_map[category][name] = { desc: description, arity: arity }
       self.class.send(:define_method, to_method_name(name).to_sym, block)
+    end
+
+    def add_global_pre_hook(name, &block)
+      method_name = to_method_name("#{name}_global_pre_hook").to_sym
+      @global_pre_hooks[name] = method_name
+      self.class.send(:define_method, method_name, block)
     end
 
     def exit!(code)
@@ -717,6 +724,8 @@ EOM
       @force_exit = false
       exit_code = 0
 
+      run_global_pre_hooks
+
       # Filter args to just command and service. If you are loading
       # custom commands and need access to the command line argument,
       # use ARGV directly.
@@ -740,6 +749,17 @@ EOM
         Kernel.exit exit_code
       else
         exit_code
+      end
+    end
+
+    def run_global_pre_hooks
+      @global_pre_hooks.each do |hook_name, method_name|
+        begin
+          send(method_name)
+        rescue => e
+          $stderr.puts("Global pre-hook '#{hook_name}' failed with: '#{e.message}'")
+          exit(1)
+        end
       end
     end
 
