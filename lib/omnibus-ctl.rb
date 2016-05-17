@@ -189,14 +189,14 @@ module Omnibus
 
     def add_command(name, description, arity = 1, &block)
       @command_map[name] = { desc: description, arity: arity }
-      self.class.send(:define_method, to_method_name(name).to_sym, block)
+      self.class.send(:define_method, to_method_name(name).to_sym) { |*args| block.call(*args) }
     end
 
     def add_command_under_category(name, category, description, arity = 1, &block)
       # add new category if it doesn't exist
       @category_command_map[category] ||= {}
       @category_command_map[category][name] = { desc: description, arity: arity }
-      self.class.send(:define_method, to_method_name(name).to_sym, block)
+      self.class.send(:define_method, to_method_name(name).to_sym) { |*args| block.call(*args) }
     end
 
     def add_global_pre_hook(name, &block)
