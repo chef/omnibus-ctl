@@ -484,11 +484,11 @@ EOM
 
     def run_chef(attr_location, args='')
       if @verbose
-        log_level = "-L debug"
+        log_level = "-l debug"
       elsif @quiet
         # null formatter is awfully quiet, so let them know we're doing something.
         log "Reconfiguring #{display_name}."
-        log_level = "-L fatal -F null"
+        log_level = "-l fatal -F null"
       else
         log_level = ""
       end

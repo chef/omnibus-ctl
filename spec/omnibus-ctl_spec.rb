@@ -904,4 +904,40 @@ describe Omnibus::Ctl do
       end
     end
   end
+
+  describe "run_chef" do
+    context "when verbose is on" do
+      before(:each) do
+        @verbose = @ctl.verbose
+        @ctl.verbose = true
+      end
+
+      after(:each) do
+        @ctl.verbose = @verbose
+      end
+
+      it "sets log_level to :debug" do
+        expect(@ctl).to receive(:remove_old_node_state)
+        expect(@ctl).to receive(:run_command).with(/-l debug/)
+        @ctl.run_chef("attributes.json")
+      end
+    end
+
+    context "when quiet is on" do
+      before(:each) do
+        @quiet = @ctl.instance_variable_get(:@quiet)
+        @ctl.instance_variable_set(:@quiet, true)
+      end
+
+      after(:each) do
+        @ctl.instance_variable_set(:@quiet, @quiet)
+      end
+
+      it 'sets log level to fatal' do
+        expect(@ctl).to receive(:remove_old_node_state)
+        expect(@ctl).to receive(:run_command).with(/-l fatal -F null/)
+        @ctl.run_chef("attributes.json")
+      end
+    end
+  end
 end
