@@ -571,7 +571,7 @@ EOM
 
     def tail(*args)
       # find /var/log -type f -not -path '*/sasl/*' | grep -E -v '(lock|@|tgz|gzip)' | xargs tail --follow=name --retry
-      command = "find #{log_path}"
+      command = "find -L #{log_path}"
       command << "/#{args[1]}" if args[1]
       command << ' -type f'
       command << log_path_exclude.map { |path| " -not -path #{path}" }.join(' ')
