@@ -58,6 +58,9 @@ module Omnibus
       @force_exit = false
       @global_pre_hooks = {}
 
+      # Remove SVDIR if it is set
+      ENV.delete('SVDIR')
+
       # backwards compat command map that does not have categories
       @command_map = { }
 
