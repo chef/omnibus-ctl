@@ -58,8 +58,10 @@ module Omnibus
       @force_exit = false
       @global_pre_hooks = {}
 
-      # Remove SVDIR if it is set
-      ENV.delete('SVDIR')
+      # TODO(ssd) 2017-03-28: Set SVDIR explicitly. Once we fix a bug
+      # in our debian support, where we rely on system-installed
+      # runit, we can likely change this back to ENV.delete("SVDIR")
+      ENV['SVDIR'] = service_path
 
       # backwards compat command map that does not have categories
       @command_map = { }
