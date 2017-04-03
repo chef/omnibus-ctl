@@ -321,7 +321,7 @@ EOM
           sleep 60
         rescue Interrupt
           log ""
-          exit 0
+          Kernel.exit 1
         end
       end
     end
