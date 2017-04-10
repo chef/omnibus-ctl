@@ -249,12 +249,11 @@ describe Omnibus::Ctl do
     end
 
     it "exits 0 if the command is --help" do
-      begin
+      expect {
         @ctl.run(["--help"])
-      rescue SystemExit => e
-       exit_code = e.status
-      end
-      expect(exit_code).to eq(0)
+      }.to raise_error { |error|
+        expect(error.status).to eq(0)
+      }
     end
 
     it "runs the method describe by the command" do
