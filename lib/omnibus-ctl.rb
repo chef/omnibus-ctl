@@ -694,6 +694,11 @@ EOM
 
       command_to_run = args[0]
 
+      if command_to_run == "--help"
+        help
+        Kernel.exit 0
+      end
+
       # This piece of code checks if the argument is an option. If it is,
       # then it sets service to nil and adds the argument into the options
       # argument. This is ugly. A better solution is having a proper parser.
