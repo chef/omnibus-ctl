@@ -248,6 +248,14 @@ describe Omnibus::Ctl do
       expect(exit_code).to eq(2)
     end
 
+    it "exits 0 if the command is --help" do
+      expect {
+        @ctl.run(["--help"])
+      }.to raise_error { |error|
+        expect(error.status).to eq(0)
+      }
+    end
+
     it "runs the method describe by the command" do
       expect(@ctl).to receive(:help).with("help")
       @ctl.run(["help"])
