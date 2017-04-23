@@ -362,7 +362,7 @@ EOM
     # run an sv command for a specific service name
     def run_sv_command_for_service(sv_cmd, service_name)
       if service_enabled?(service_name)
-        status = run_command("#{base_path}/init/#{service_name} #{sv_cmd}")
+        status = run_command("#{base_path}/embedded/bin/sv #{sv_cmd} #{service_name}")
         status.exitstatus
       else
         log "#{service_name} disabled" if sv_cmd == "status" && verbose

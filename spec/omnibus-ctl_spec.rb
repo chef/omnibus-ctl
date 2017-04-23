@@ -412,10 +412,10 @@ describe Omnibus::Ctl do
         allow(@ctl).to receive(:service_enabled?).and_return(true)
       end
 
-      it "runs the service command from init" do
+      it "runs the service command using the embedded sv" do
         expect(@ctl)
           .to receive(:run_command)
-          .with("/opt/chef-server/init/erchef start")
+          .with("/opt/chef-server/embedded/bin/sv start erchef")
           .and_return(@status)
         @ctl.run_sv_command_for_service("start", "erchef")
       end
