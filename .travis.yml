@@ -6,7 +6,7 @@ cache:
   bundler: true
 language: ruby
 rvm:
-  - 1.9.3
+  - 2.2.6
 script:
   - bundle install --binstubs
   - ./bin/rspec spec/
