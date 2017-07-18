@@ -579,7 +579,7 @@ EOM
       command = "find -L #{log_path}"
       command << "/#{args[1]}" if args[1]
       command << ' -type f'
-      command << log_path_exclude.map { |path| " -not -path #{path}" }.join(' ')
+      command << log_path_exclude.map { |path| " -not -path '#{path}'" }.join(' ')
       command << " | grep -E -v '#{log_exclude}' | xargs tail --follow=name --retry"
 
       system(command)
