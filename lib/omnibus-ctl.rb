@@ -27,7 +27,7 @@ module Omnibus
 
     File::umask(022)
 
-    SV_COMMAND_NAMES = %w[status up down once pause cont hup alarm interrupt quit
+    SV_COMMAND_NAMES = %w[status up down once pause cont hup alarm int quit
                       term kill start stop restart shutdown force-stop
                       force-reload force-restart force-shutdown check usr1 usr2]
 
