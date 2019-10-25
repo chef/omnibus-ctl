@@ -676,19 +676,17 @@ describe Omnibus::Ctl do
 
   describe "cleanse" do
     before(:each) do
-      # this is potentially destructive if run on a live system,
-      # not to mention loaded with sleeps - skip it.
+      # No-op everything cleanup_procs_and_nuke wants to do, it's destructive
+      # (and slow/sleep-laden):
       allow(@ctl).to receive("cleanup_procs_and_nuke").and_return 0
     end
 
     it "should invoke the cleanse_post_hook" do
-      # No-op everything cleanup_procs_and_nuke wants to do, it's destructive:
       expect(@ctl).to receive("command_post_hook")
       @ctl.run(["cleanse", "yes"])
     end
 
     it "should invoke the scary_cleanse_warning" do
-      # No-op everything cleanup_procs_and_nuke wants to do, it's destructive:
       expect(@ctl).to receive("scary_cleanse_warning")
       @ctl.run(["cleanse", "yes"])
     end
@@ -741,6 +739,12 @@ describe Omnibus::Ctl do
         allow(@ctl).to receive(:external_services).and_return({})
         @ctl.scary_cleanse_warning("cleanse")
         expect(ctl_output).not_to match(/--with-external/)
+      end
+
+      it "will hard-stop when the operator uses Ctrl+C to exit" do
+        allow(@ctl).to receive(:sleep).and_raise(Interrupt)
+        expect(Kernel).to receive(:exit).with(1)
+        @ctl.scary_cleanse_warning("cleanse")
       end
     end
 
