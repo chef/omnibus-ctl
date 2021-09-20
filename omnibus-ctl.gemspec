@@ -1,5 +1,4 @@
-# -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
+$:.push File.expand_path("lib", __dir__)
 require "omnibus-ctl/version"
 
 Gem::Specification.new do |s|
@@ -18,7 +17,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rspec_junit_formatter"
 
   s.bindir       = "bin"
-  s.executables  = 'omnibus-ctl'
-  s.require_path = 'lib'
-  s.files = %w(README.md) + Dir.glob("lib/**/*")
+  s.executables  = "omnibus-ctl"
+  s.require_path = "lib"
+  s.files = %w{README.md} + Dir.glob("lib/**/*")
 end
