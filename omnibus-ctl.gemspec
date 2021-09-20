@@ -12,6 +12,8 @@ Gem::Specification.new do |s|
   s.summary     = %q{Provides command line control for omnibus packages}
   s.description = %q{Provides command line control for omnibus pakcages, rarely used as a gem}
 
+  s.required_ruby_version = ">= 2.6"
+
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec", "~> 3.2"
   s.add_development_dependency "rspec_junit_formatter"
