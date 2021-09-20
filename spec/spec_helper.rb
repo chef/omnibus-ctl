@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-require 'rspec'
-require 'omnibus-ctl'
+require "rspec"
+require "omnibus-ctl"
 
 RSpec.configure do |config|
-  config.filter_run :focus => true
+  config.filter_run focus: true
   config.run_all_when_everything_filtered = true
 end
 

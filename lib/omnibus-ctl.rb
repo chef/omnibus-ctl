@@ -29,7 +29,7 @@ module Omnibus
 
     SV_COMMAND_NAMES = %w{status up down once pause cont hup alarm int quit
                       term kill start stop restart shutdown force-stop
-                      force-reload force-restart force-shutdown check usr1 usr2}
+                      force-reload force-restart force-shutdown check usr1 usr2}.freeze
 
     attr_accessor :name, :display_name, :log_exclude, :base_path, :sv_path,
     :service_path, :etc_path, :data_path, :log_path, :command_map, :category_command_map,
@@ -188,7 +188,7 @@ module Omnibus
     end
 
     def load_file(filepath)
-      eval(IO.read(filepath), nil, filepath, 1)
+      eval(IO.read(filepath), nil, filepath, 1) # rubocop: disable Security/Eval
     end
 
     def add_command(name, description, arity = 1, &block)
@@ -453,7 +453,7 @@ EOM
     def service_external?(service)
       return false if service.nil?
 
-      external_services.has_key? service
+      external_services.key? service
     end
 
     # Gives package config from the running_config.
@@ -668,12 +668,12 @@ EOM
     # or the category_command_map, if the command is not found
     # return nil
     def retrieve_command(command_to_run)
-      if command_map.has_key?(command_to_run)
+      if command_map.key?(command_to_run)
         command_map[command_to_run]
       else
         command = nil
         category_command_map.each do |category, commands|
-          command = commands[command_to_run] if commands.has_key?(command_to_run)
+          command = commands[command_to_run] if commands.key?(command_to_run)
         end
         # return the command, or nil if it wasn't found
         command
