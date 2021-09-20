@@ -1,16 +1,17 @@
 <!-- usage documentation: http://expeditor.es.chef.io/configuration/changelog/ -->
 
-<!-- latest_release 0.6.3 -->
-## [v0.6.3](https://github.com/chef/omnibus-ctl/tree/v0.6.3) (2021-09-20)
+<!-- latest_release 0.6.4 -->
+## [v0.6.4](https://github.com/chef/omnibus-ctl/tree/v0.6.4) (2021-09-20)
 
 #### Merged Pull Requests
-- Chefstyle the lib and bin dirs [#75](https://github.com/chef/omnibus-ctl/pull/75) ([tas50](https://github.com/tas50))
+- Chefstyle everything else [#76](https://github.com/chef/omnibus-ctl/pull/76) ([tas50](https://github.com/tas50))
 <!-- latest_release -->
 
 <!-- release_rollup since=0.6.0 -->
 ### Changes not yet released to rubygems.org
 
 #### Merged Pull Requests
+- Chefstyle everything else [#76](https://github.com/chef/omnibus-ctl/pull/76) ([tas50](https://github.com/tas50)) <!-- 0.6.4 -->
 - Chefstyle the lib and bin dirs [#75](https://github.com/chef/omnibus-ctl/pull/75) ([tas50](https://github.com/tas50)) <!-- 0.6.3 -->
 - Use the variable for release_branch [#74](https://github.com/chef/omnibus-ctl/pull/74) ([tas50](https://github.com/tas50)) <!-- 0.6.2 -->
 <!-- release_rollup -->
