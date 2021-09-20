@@ -746,7 +746,7 @@ describe Omnibus::Ctl do
 
     context "cleanse_post_hook" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:exist?).and_return(true)
         allow(File).to receive(:read).and_return(file_contents)
       end
 
@@ -783,7 +783,7 @@ describe Omnibus::Ctl do
   describe "external_services" do
     context "when there is a running_config" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:exist?).and_return(true)
         allow(File).to receive(:read).and_return(file_contents)
       end
       it "contains only configuration entries with 'external=true' set" do
@@ -805,7 +805,7 @@ describe Omnibus::Ctl do
 
   describe "service_external?" do
     before(:each) do
-      allow(File).to receive(:exists?).and_return(true)
+      allow(File).to receive(:exist?).and_return(true)
       allow(File).to receive(:read).and_return(file_contents)
     end
 
@@ -826,13 +826,13 @@ describe Omnibus::Ctl do
 
   describe "running_config" do
     it "checks if the file exists" do
-      expect(File).to receive(:exists?).with(file_path).and_return(false)
+      expect(File).to receive(:exist?).with(file_path).and_return(false)
       @ctl.running_config
     end
 
     context "when the file exists" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:exist?).and_return(true)
       end
 
       it "should return the parsed contents of the file" do
@@ -846,7 +846,7 @@ describe Omnibus::Ctl do
 
     context "when the file doesn't exist" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(false)
+        allow(File).to receive(:exist?).and_return(false)
       end
 
       it "should return nil" do
@@ -859,7 +859,7 @@ describe Omnibus::Ctl do
 
   context "running_package_config" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:exist?).and_return(true)
         allow(File).to receive(:read).and_return(file_contents)
       end
       it "returns {} when the package name isn't present in config" do
@@ -867,7 +867,7 @@ describe Omnibus::Ctl do
         expect(@ctl.running_package_config).to eq({})
       end
       it "returns {} when there is no running config" do
-        allow(File).to receive(:exists?).and_return(false)
+        allow(File).to receive(:exist?).and_return(false)
         expect(@ctl.running_package_config).to eq({})
       end
       it "return the config hash when it can find the service key provided" do
@@ -877,7 +877,7 @@ describe Omnibus::Ctl do
   end
   context "running_service_config" do
       before(:each) do
-        allow(File).to receive(:exists?).and_return(true)
+        allow(File).to receive(:exist?).and_return(true)
         allow(File).to receive(:read).and_return(file_contents)
       end
 
@@ -885,7 +885,7 @@ describe Omnibus::Ctl do
         expect(@ctl.running_service_config('service9')) .to eq(nil)
       end
       it "returns nil when there is no running config" do
-        allow(File).to receive(:exists?).and_return(false)
+        allow(File).to receive(:exist?).and_return(false)
         expect(@ctl.running_service_config('service1')) .to eq(nil)
       end
       it "return the config hash when it can find the service key provided" do
