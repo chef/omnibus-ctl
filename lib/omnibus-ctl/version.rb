@@ -1,5 +1,5 @@
 module Omnibus
   class Ctl
-    VERSION = "0.6.0".freeze
+    VERSION = "0.6.2".freeze
   end
 end
