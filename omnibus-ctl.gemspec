@@ -12,7 +12,6 @@ Gem::Specification.new do |s|
   s.summary     = %q{Provides command line control for omnibus packages}
   s.description = %q{Provides command line control for omnibus pakcages, rarely used as a gem}
 
-  # specify any dependencies here; for example:
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec", "~> 3.2"
   s.add_development_dependency "rspec_junit_formatter"
@@ -20,5 +19,5 @@ Gem::Specification.new do |s|
   s.bindir       = "bin"
   s.executables  = 'omnibus-ctl'
   s.require_path = 'lib'
-  s.files = %w(README.md) + Dir.glob("lib/**/*")
+  s.files = %w(LICENSE) + Dir.glob("lib/**/*")
 end
