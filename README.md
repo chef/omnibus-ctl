@@ -1,6 +1,6 @@
 # omnibus-ctl
 
-[![Build Status Master](https://travis-ci.org/chef/omnibus-ctl.svg?branch=master)](https://travis-ci.org/chef/omnibus-ctl)
+[![unit](https://github.com/chef/omnibus-ctl/actions/workflows/unit.yml/badge.svg)](https://github.com/chef/omnibus-ctl/actions/workflows/unit.yml)
 
 omnibus-ctl provides service control and configuration for omnibus packages.
 
@@ -19,7 +19,7 @@ bundle install
 Then run the tests:
 
 ```
-bin/rspec
+bundle exec rake
 ```
 
 ## Command API
@@ -105,7 +105,7 @@ versions do.*
 
 See the LICENSE file for details.
 
-Copyright: Copyright (c) 2012-2015 Chef Software, Inc.
+Copyright: Copyright (c) Chef Software, Inc.
 License: Apache License, Version 2.0
 
 Licensed under the Apache License, Version 2.0 (the "License");
