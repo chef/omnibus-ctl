@@ -1,9 +1,17 @@
 <!-- usage documentation: http://expeditor.es.chef.io/configuration/changelog/ -->
 
-<!-- latest_release -->
+<!-- latest_release 0.6.5 -->
+## [v0.6.5](https://github.com/chef/omnibus-ctl/tree/v0.6.5) (2021-10-15)
+
+#### Merged Pull Requests
+- Update chefstyle requirement from = 2.0.9 to = 2.1.0 [#77](https://github.com/chef/omnibus-ctl/pull/77) ([dependabot[bot]](https://github.com/dependabot[bot]))
 <!-- latest_release -->
 
-<!-- release_rollup -->
+<!-- release_rollup since=0.6.4 -->
+### Changes not yet released to rubygems.org
+
+#### Merged Pull Requests
+- Update chefstyle requirement from = 2.0.9 to = 2.1.0 [#77](https://github.com/chef/omnibus-ctl/pull/77) ([dependabot[bot]](https://github.com/dependabot[bot])) <!-- 0.6.5 -->
 <!-- release_rollup -->
 
 <!-- latest_stable_release -->
