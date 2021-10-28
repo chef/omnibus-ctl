@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = ">= 2.6"
 
-  s.add_development_dependency "chefstyle", "2.1.1"
+  s.add_development_dependency "chefstyle", "2.1.2"
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec", "~> 3.2"
   s.add_development_dependency "rspec_junit_formatter"
