@@ -1,16 +1,17 @@
 <!-- usage documentation: http://expeditor.es.chef.io/configuration/changelog/ -->
 
-<!-- latest_release 0.6.6 -->
-## [v0.6.6](https://github.com/chef/omnibus-ctl/tree/v0.6.6) (2021-10-25)
+<!-- latest_release 0.6.7 -->
+## [v0.6.7](https://github.com/chef/omnibus-ctl/tree/v0.6.7) (2021-10-28)
 
 #### Merged Pull Requests
-- Update chefstyle requirement from = 2.1.0 to = 2.1.1 [#78](https://github.com/chef/omnibus-ctl/pull/78) ([dependabot[bot]](https://github.com/dependabot[bot]))
+- Update chefstyle requirement from = 2.1.1 to = 2.1.2 [#79](https://github.com/chef/omnibus-ctl/pull/79) ([dependabot[bot]](https://github.com/dependabot[bot]))
 <!-- latest_release -->
 
 <!-- release_rollup since=0.6.4 -->
 ### Changes not yet released to rubygems.org
 
 #### Merged Pull Requests
+- Update chefstyle requirement from = 2.1.1 to = 2.1.2 [#79](https://github.com/chef/omnibus-ctl/pull/79) ([dependabot[bot]](https://github.com/dependabot[bot])) <!-- 0.6.7 -->
 - Update chefstyle requirement from = 2.1.0 to = 2.1.1 [#78](https://github.com/chef/omnibus-ctl/pull/78) ([dependabot[bot]](https://github.com/dependabot[bot])) <!-- 0.6.6 -->
 - Update chefstyle requirement from = 2.0.9 to = 2.1.0 [#77](https://github.com/chef/omnibus-ctl/pull/77) ([dependabot[bot]](https://github.com/dependabot[bot])) <!-- 0.6.5 -->
 <!-- release_rollup -->
