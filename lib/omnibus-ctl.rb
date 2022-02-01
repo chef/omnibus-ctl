@@ -15,6 +15,7 @@
 #
 
 require "omnibus-ctl/version"
+require "chef-utils/dist" unless defined?(ChefUtils)
 require "json" unless defined?(JSON)
 require "fileutils" unless defined?(FileUtils)
 
@@ -437,8 +438,9 @@ EOM
 
     # returns nil when chef-server-running.json does not exist
     def running_config
-      @running_config ||= if File.exist?("#{etc_path}/chef-server-running.json")
-                            JSON.parse(File.read("#{etc_path}/chef-server-running.json"))
+      fname = "#{etc_path}/#{::ChefUtils::Dist::Server::SERVER}-running.json"
+      @running_config ||= if File.exist?(fname)
+                            JSON.parse(File.read(fname))
                           end
     end
 
