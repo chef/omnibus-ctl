@@ -429,7 +429,8 @@ EOM
     # 'opscode', not 'private-chef'
     def package_name
       case @name
-      when "opscode"
+      # The "opscode" in /opt/opscode
+      when ::ChefUtils::Dist::Org::LEGACY_CONF_DIR
         "private-chef"
       else
         @name
