@@ -1,9 +1,17 @@
 <!-- usage documentation: http://expeditor.es.chef.io/configuration/changelog/ -->
 
-<!-- latest_release -->
+<!-- latest_release 0.6.10 -->
+## [v0.6.10](https://github.com/chef/omnibus-ctl/tree/v0.6.10) (2022-02-15)
+
+#### Merged Pull Requests
+- Use dist constant in package_name method [#84](https://github.com/chef/omnibus-ctl/pull/84) ([ramereth](https://github.com/ramereth))
 <!-- latest_release -->
 
-<!-- release_rollup -->
+<!-- release_rollup since=0.6.9 -->
+### Changes not yet released to rubygems.org
+
+#### Merged Pull Requests
+- Use dist constant in package_name method [#84](https://github.com/chef/omnibus-ctl/pull/84) ([ramereth](https://github.com/ramereth)) <!-- 0.6.10 -->
 <!-- release_rollup -->
 
 <!-- latest_stable_release -->
