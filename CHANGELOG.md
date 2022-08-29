@@ -1,16 +1,17 @@
 <!-- usage documentation: http://expeditor.es.chef.io/configuration/changelog/ -->
 
-<!-- latest_release 0.6.11 -->
-## [v0.6.11](https://github.com/chef/omnibus-ctl/tree/v0.6.11) (2022-02-28)
+<!-- latest_release 0.6.12 -->
+## [v0.6.12](https://github.com/chef/omnibus-ctl/tree/v0.6.12) (2022-08-29)
 
 #### Merged Pull Requests
-- Use client CLI dist constant when executing chef runs [#86](https://github.com/chef/omnibus-ctl/pull/86) ([ramereth](https://github.com/ramereth))
+- update codeowners to include omnibus team &amp; some cleanup [#87](https://github.com/chef/omnibus-ctl/pull/87) ([vkarve-chef](https://github.com/vkarve-chef))
 <!-- latest_release -->
 
 <!-- release_rollup since=0.6.10 -->
 ### Changes not yet released to rubygems.org
 
 #### Merged Pull Requests
+- update codeowners to include omnibus team &amp; some cleanup [#87](https://github.com/chef/omnibus-ctl/pull/87) ([vkarve-chef](https://github.com/vkarve-chef)) <!-- 0.6.12 -->
 - Use client CLI dist constant when executing chef runs [#86](https://github.com/chef/omnibus-ctl/pull/86) ([ramereth](https://github.com/ramereth)) <!-- 0.6.11 -->
 <!-- release_rollup -->
 
