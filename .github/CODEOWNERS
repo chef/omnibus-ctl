@@ -1,4 +1,4 @@
 # Order is important. The last matching pattern has the most precedence.
 
-.expeditor/  @chef/jex-team
+*            @chef/infra-packages
 *.md         @chef/docs-team
