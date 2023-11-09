@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "chef-utils", ">= 16.5.54" # for ChefUtils::Dist constants
 
-  s.add_development_dependency "chefstyle", "2.2.0"
+  s.add_development_dependency "chefstyle", "2.2.3"
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec", "~> 3.2"
   s.add_development_dependency "rspec_junit_formatter"
